@@ -5,7 +5,8 @@
         public int Id { get; set; }
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
-        public string Category { get; set; } = null!; // museum, park, etc.
+        //public string Category { get; set; } = null!; // museum, park, etc.
+        public ActivityCategory CategoryCategory { get; set; }
 
         public string Address { get; set; } = null!;
         public string Phone { get; set; } = null!;

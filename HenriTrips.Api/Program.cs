@@ -19,6 +19,13 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// JSON options for ENums
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
@@ -73,7 +80,7 @@ using (var scope = app.Services.CreateScope())
     if (!await roleManager.RoleExistsAsync("User"))
         await roleManager.CreateAsync(new IdentityRole("User"));
 }
-
+ 
 // Enable middleware
 if (app.Environment.IsDevelopment())
 {
