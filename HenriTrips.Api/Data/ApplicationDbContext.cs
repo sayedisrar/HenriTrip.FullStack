@@ -1,53 +1,40 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using HenriTrips.Api.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
+ 
 namespace HenriTrips.Api.Data
 {
-    // ApplicationDbContext inherits IdentityDbContext to manage all Identity tables
     public class ApplicationDbContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
- 
 
-
-        // TODO: Add your other entities here when ready
-        // Example:
-        // public DbSet<Guide> Guides { get; set; }
-        // public DbSet<Activity> Activities { get; set; }
+        public DbSet<Guide> Guides { get; set; }
+        public DbSet<Activity> Activities { get; set; }
+        public DbSet<GuideUser> GuideUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // You can customize Identity table names or relationships here if needed
-            // Example: rename Identity tables
-            // builder.Entity<IdentityUser>(b => { b.ToTable("Users"); });
+            
+            builder.Entity<GuideUser>()
+                .HasKey(x => new { x.UserId, x.GuideId });
+
+            // Optional but professional (recommended)
+            builder.Entity<GuideUser>()
+                .HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId);
+
+            builder.Entity<GuideUser>()
+                .HasOne(x => x.Guide)
+                .WithMany(g => g.GuideUsers)
+                .HasForeignKey(x => x.GuideId);
         }
     }
 }
-
-//using HenriTrips.Api.Entities;
-
-//using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-//using Microsoft.EntityFrameworkCore;
-
-//namespace HenriTrips.Api.Data
-//{
-//    public class ApplicationDbContext : IdentityDbContext<User, Microsoft.AspNetCore.Identity.IdentityRole<int>, int>
-//    {
-//        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-//            : base(options)
-//        {
-//        }
-
-//        // Leave OnModelCreating empty for now; wizard will handle Identity scaffolding
-//        protected override void OnModelCreating(ModelBuilder builder)
-//        {
-//            base.OnModelCreating(builder);
-//        }
-//    }
-//}

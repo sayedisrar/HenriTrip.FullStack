@@ -62,6 +62,18 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+//check if roles exist, if not create them. This is a one-time setup, but you can keep it here for simplicity. In production, consider a more robust seeding strategy.
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    if (!await roleManager.RoleExistsAsync("Admin"))
+        await roleManager.CreateAsync(new IdentityRole("Admin"));
+
+    if (!await roleManager.RoleExistsAsync("User"))
+        await roleManager.CreateAsync(new IdentityRole("User"));
+}
+
 // Enable middleware
 if (app.Environment.IsDevelopment())
 {

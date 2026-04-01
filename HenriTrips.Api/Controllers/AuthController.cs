@@ -30,17 +30,21 @@ namespace HenriTrips.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
+//           
+
             var user = new IdentityUser { UserName = model.Email, Email = model.Email };
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
-
+            //Add default role to new users. but update it at UI section to add desired role by admin
+            await _userManager.AddToRoleAsync(user, "User");
             return Ok(new { Message = "User created successfully!" });
         }
 
         // POST: api/auth/login
         [HttpPost("login")]
+      
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
@@ -49,22 +53,32 @@ namespace HenriTrips.Api.Controllers
             var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (!result.Succeeded) return Unauthorized("Invalid email or password");
 
-            var token = GenerateJwtToken(user);
+            // 👇 REPLACE OLD TOKEN CALL WITH THIS
+            var token = await GenerateJwtToken(user);
 
-            return Ok(new { Token = token });
+            return Ok(new { token });
         }
-
-        private string GenerateJwtToken(IdentityUser user)
+        private async Task<string> GenerateJwtToken(IdentityUser user)
         {
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:SecretKey"]);
             var tokenHandler = new JwtSecurityTokenHandler();
 
+            // 👇 Get roles of user
+            var roles = await _userManager.GetRolesAsync(user);
+
             var claims = new List<Claim>
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.UserName),
+        new Claim(ClaimTypes.NameIdentifier, user.Id)
+    };
+
+            // 👇 Add roles to claims
+            foreach (var role in roles)
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.UserName)
-            };
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -81,6 +95,7 @@ namespace HenriTrips.Api.Controllers
             return tokenHandler.WriteToken(token);
         }
 
+       
         // POST: api/auth/forgot-password
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordModel model)
