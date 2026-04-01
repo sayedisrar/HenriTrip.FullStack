@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="HenriTrip.Api/HenriTrip.Api.csproj" />
+  <Project Path="HenriTrips.Api/HenriTrips.Api.csproj" Id="f100d6ae-45cf-4d2a-960c-fa74f9419372" />
+</Solution>
