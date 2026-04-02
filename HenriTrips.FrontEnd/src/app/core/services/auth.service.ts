@@ -17,7 +17,7 @@ export interface User {
 export class AuthService {
   private http = inject(HttpClient);
   // Default fallback API url. Replace with configuration in the future.
-  private apiUrl = 'http://localhost:5001/api/auth';
+  private apiUrl = 'https://localhost:7079/api/auth';
   
   currentUser = signal<User | null>(null);
 

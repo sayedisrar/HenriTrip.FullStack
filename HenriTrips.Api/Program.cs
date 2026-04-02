@@ -62,6 +62,16 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "HenriTrip API", Version = "v1" });
 });
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalDev", policy =>
+        policy.WithOrigins("http://localhost:4200") // frontend origin
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
+});
+
 var app = builder.Build();
 
 // Seed roles and create default admin user
@@ -106,6 +116,9 @@ app.UseHttpsRedirection();
 // IMPORTANT: authentication before authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Enable CORS policy
+app.UseCors("AllowLocalDev");
 
 app.MapControllers();
 
