@@ -11,7 +11,7 @@ namespace HenriTrips.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class GuidesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -124,7 +124,7 @@ namespace HenriTrips.Api.Controllers
         }
 
         // POST: api/guides
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateGuide(GuideCreateDto dto)
         {
@@ -145,7 +145,7 @@ namespace HenriTrips.Api.Controllers
         }
 
         // PUT: api/guides/{id}
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateGuide(int id, GuideUpdateDto dto)
         {
@@ -165,7 +165,7 @@ namespace HenriTrips.Api.Controllers
         }
 
         // DELETE: api/guides/{id}
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGuide(int id)
         {
@@ -186,7 +186,7 @@ namespace HenriTrips.Api.Controllers
         }
 
         // POST: api/guides/{guideId}/invite-user/{userId}
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("{guideId}/invite-user/{userId}")]
         public async Task<IActionResult> InviteUserToGuide(int guideId, string userId)
         {
@@ -213,7 +213,7 @@ namespace HenriTrips.Api.Controllers
         }
 
         // DELETE: api/guides/{guideId}/remove-user/{userId}
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{guideId}/remove-user/{userId}")]
         public async Task<IActionResult> RemoveUserFromGuide(int guideId, string userId)
         {
@@ -230,7 +230,7 @@ namespace HenriTrips.Api.Controllers
         }
 
         // Activity endpoints
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("activity")]
         public async Task<IActionResult> AddActivity(ActivityCreateDto dto)
         {
@@ -258,7 +258,7 @@ namespace HenriTrips.Api.Controllers
             return Ok(activity);
         }
 
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPut("activity/{activityId}")]
         public async Task<IActionResult> UpdateActivity(int activityId, ActivityCreateDto dto)
         {
@@ -280,7 +280,7 @@ namespace HenriTrips.Api.Controllers
             return Ok(activity);
         }
 
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpDelete("activity/{activityId}")]
         public async Task<IActionResult> DeleteActivity(int activityId)
         {
@@ -308,7 +308,7 @@ namespace HenriTrips.Api.Controllers
 //{
 //    [Route("api/[controller]")]
 //    [ApiController]
-//    //[Authorize]
+//    [Authorize]
 //    public class GuidesController : ControllerBase
 //    {
 //        private readonly ApplicationDbContext _context;
@@ -365,7 +365,7 @@ namespace HenriTrips.Api.Controllers
 //        }
 
 //        // POST: api/guides
-//        //[Authorize(Roles = "Admin")]
+//        [Authorize(Roles = "Admin")]
 //        [HttpPost]
 //        public async Task<IActionResult> CreateGuide(GuideCreateDto dto)
 //        {
@@ -386,7 +386,7 @@ namespace HenriTrips.Api.Controllers
 //        }
 
 //        // POST: api/guides/activity
-//        //[Authorize(Roles = "Admin")]
+//        [Authorize(Roles = "Admin")]
 //        [HttpPost("activity")]
 //        public async Task<IActionResult> AddActivity(ActivityCreateDto dto)
 //        {
