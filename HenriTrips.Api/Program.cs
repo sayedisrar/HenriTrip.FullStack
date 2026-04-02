@@ -1,23 +1,19 @@
 using HenriTrips.Api.Data;
 using HenriTrips.Api.Entities;
-
-//using HenriTrips.Api.enti;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("HinriTripsAPIconstr") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");;
+var connectionString = builder.Configuration.GetConnectionString("HinriTripsAPIconstr") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 
 // JSON options for ENums
 builder.Services.AddControllers()
@@ -26,20 +22,20 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
-// Use Identity with int keys and roles
+// Use Identity with IdentityUser
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = true;
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-
-// JWT setup (still service registration)
+// JWT setup
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:SecretKey"]);
 builder.Services.AddAuthentication(options =>
 {
@@ -60,8 +56,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// other service registrations (controllers, swagger, etc.)
-builder.Services.AddControllers();
+// Swagger setup - REMOVED OpenAPI
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "HenriTrip API", Version = "v1" });
@@ -69,24 +64,41 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-//check if roles exist, if not create them. This is a one-time setup, but you can keep it here for simplicity. In production, consider a more robust seeding strategy.
+// Seed roles and create default admin user
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
 
+    // Create roles
     if (!await roleManager.RoleExistsAsync("Admin"))
         await roleManager.CreateAsync(new IdentityRole("Admin"));
 
     if (!await roleManager.RoleExistsAsync("User"))
         await roleManager.CreateAsync(new IdentityRole("User"));
+
+    // Create default admin user
+    var adminEmail = "admin@henritrip.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
+    {
+        adminUser = new IdentityUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail
+        };
+
+        await userManager.CreateAsync(adminUser, "Admin@123");
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
 }
- 
+
 // Enable middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "HenriTrip API v1"));
-    app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();

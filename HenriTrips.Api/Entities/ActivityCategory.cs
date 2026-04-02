@@ -3,10 +3,9 @@
     public enum ActivityCategory
     {
         Museum,
-        Chateau,
         Park,
-        Cave,
-        Activity
+        Restaurant,
+        Beach,
+        Other
     }
- 
 }

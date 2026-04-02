@@ -1,8 +1,9 @@
-﻿namespace HenriTrips.Api.Entities
+﻿using HenriTrips.Api.Entities;
+
+namespace HenriTrips.Api.DTOs.Activity
 {
-    public class Activity
+    public class ActivityCreateDto
     {
-        public int Id { get; set; }
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public ActivityCategory CategoryCategory { get; set; }
@@ -12,8 +13,6 @@
         public string Website { get; set; } = null!;
         public int Order { get; set; }
         public int Day { get; set; }
-
         public int GuideId { get; set; }
-        public Guide Guide { get; set; } = null!;
     }
 }
