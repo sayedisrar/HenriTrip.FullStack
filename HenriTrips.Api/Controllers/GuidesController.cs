@@ -1,8 +1,9 @@
 ﻿using HenriTrips.Api.Data;
-using HenriTrips.Api.Entities;
-using HenriTrips.Api.DTOs.Guide;
 using HenriTrips.Api.DTOs.Activity;
+using HenriTrips.Api.DTOs.Guide;
+using HenriTrips.Api.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -15,11 +16,14 @@ namespace HenriTrips.Api.Controllers
     public class GuidesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public GuidesController(ApplicationDbContext context)
+        public GuidesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
+
 
         // GET: api/guides
         [HttpGet]
@@ -293,121 +297,23 @@ namespace HenriTrips.Api.Controllers
 
             return Ok(new { Message = "Activity deleted successfully" });
         }
+
+        // Add to GuidesController.cs - GET user's invited guides
+        [Authorize(Roles = "Admin")]
+        [HttpGet("user/{userId}/invited-guides")]
+        public async Task<IActionResult> GetUserInvitedGuides(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound("User not found");
+
+            var invitedGuideIds = await _context.GuideUsers
+                .Where(gu => gu.UserId == userId)
+                .Select(gu => gu.GuideId.ToString())
+                .ToListAsync();
+
+            return Ok(invitedGuideIds);
+        }
+ 
     }
 }
-//using HenriTrips.Api.Data;
- //using HenriTrips.Api.Entities;
- //using HenriTrips.Api.DTOs.Guide;
- //using HenriTrips.Api.DTOs.Activity;
- //using Microsoft.AspNetCore.Authorization;
- //using Microsoft.AspNetCore.Mvc;
- //using Microsoft.EntityFrameworkCore;
- //using System.Security.Claims;
-
-//namespace HenriTrips.Api.Controllers
-//{
-//    [Route("api/[controller]")]
-//    [ApiController]
-//    [Authorize]
-//    public class GuidesController : ControllerBase
-//    {
-//        private readonly ApplicationDbContext _context;
-
-//        public GuidesController(ApplicationDbContext context)
-//        {
-//            _context = context;
-//        }
-
-//        // GET: api/guides
-//        [HttpGet]
-//        public async Task<IActionResult> GetGuides()
-//        {
-//            //var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-//            //if (!int.TryParse(userIdStr, out int userId))
-//            //    return Unauthorized("Invalid user");
-
-//            //var isAdmin = User.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
-
-//            //var guidesQuery = isAdmin
-//            //    ? _context.Guides.Include(g => g.Activities)
-//            //    : _context.Guides
-//            //        .Where(g => g.GuideUsers.Any(u => u.UserId == userId))
-//            //        .Include(g => g.Activities);
-
-//            //var guides = await guidesQuery
-//            //    .Select(g => new GuideResponseDto
-//            //    {
-//            //        Id = g.Id,
-//            //        Title = g.Title,
-//            //        Description = g.Description,
-//            //        Days = g.Days,
-//            //        Mobility = g.Mobility,
-//            //        Season = g.Season,
-//            //        ForWho = g.ForWho,
-//            //        Activities = g.Activities.Select(a => new ActivityResponseDto
-//            //        {
-//            //            Id = a.Id,
-//            //            Title = a.Title,
-//            //            Description = a.Description,
-//            //            CategoryCategory = a.CategoryCategory,
-//            //            Address = a.Address,
-//            //            Phone = a.Phone,
-//            //            Schedule = a.Schedule,
-//            //            Website = a.Website,
-//            //            Order = a.Order,
-//            //            Day = a.Day
-//            //        }).ToList()
-//            //    })
-//            //    .ToListAsync();
-
-//            //return Ok(guides);
-//            return Ok(await _context.Guides.Include(g => g.Activities).ToListAsync());
-//        }
-
-//        // POST: api/guides
-//        [Authorize(Roles = "Admin")]
-//        [HttpPost]
-//        public async Task<IActionResult> CreateGuide(GuideCreateDto dto)
-//        {
-//            var guide = new Guide
-//            {
-//                Title = dto.Title,
-//                Description = dto.Description,
-//                Days = dto.Days,
-//                Mobility = dto.Mobility,
-//                Season = dto.Season,
-//                ForWho = dto.ForWho
-//            };
-
-//            _context.Guides.Add(guide);
-//            await _context.SaveChangesAsync();
-
-//            return Ok(guide);
-//        }
-
-//        // POST: api/guides/activity
-//        [Authorize(Roles = "Admin")]
-//        [HttpPost("activity")]
-//        public async Task<IActionResult> AddActivity(ActivityCreateDto dto)
-//        {
-//            var activity = new Activity
-//            {
-//                Title = dto.Title,
-//                Description = dto.Description,
-//                CategoryCategory = dto.CategoryCategory,
-//                Address = dto.Address,
-//                Phone = dto.Phone,
-//                Schedule = dto.Schedule,
-//                Website = dto.Website,
-//                Order = dto.Order,
-//                Day = dto.Day,
-//                GuideId = dto.GuideId
-//            };
-
-//            _context.Activities.Add(activity);
-//            await _context.SaveChangesAsync();
-
-//            return Ok(activity);
-//        }
-//    }
-//}

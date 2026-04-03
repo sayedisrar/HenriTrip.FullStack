@@ -95,7 +95,7 @@ namespace HenriTrips.Api.Controllers
             return tokenHandler.WriteToken(token);
         }
 
-        // ADD THESE ADMIN ENDPOINTS:
+        // ========== ADMIN ENDPOINTS ==========
 
         [Authorize(Roles = "Admin")]
         [HttpGet("users")]
@@ -120,6 +120,24 @@ namespace HenriTrips.Api.Controllers
         }
 
         [Authorize(Roles = "Admin")]
+        [HttpGet("users/{userId}")]
+        public async Task<IActionResult> GetUserById(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound("User not found");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            return Ok(new UserResponseDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                Roles = roles.ToList()
+            });
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("create-user")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserModel model)
         {
@@ -135,7 +153,65 @@ namespace HenriTrips.Api.Controllers
 
             await _userManager.AddToRoleAsync(user, model.Role);
 
-            return Ok(new { Message = $"User created with {model.Role} role" });
+            return Ok(new { Message = $"User created with {model.Role} role", UserId = user.Id });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("users/{userId}")]
+        public async Task<IActionResult> UpdateUser(string userId, [FromBody] UpdateUserModel model)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound("User not found");
+
+            // Update Email if provided and changed
+            if (!string.IsNullOrEmpty(model.Email) && model.Email != user.Email)
+            {
+                user.Email = model.Email;
+                user.UserName = model.Email; // Keep username in sync with email
+                user.NormalizedEmail = model.Email.ToUpperInvariant();
+                user.NormalizedUserName = model.Email.ToUpperInvariant();
+            }
+
+            // Update Name if provided
+            if (!string.IsNullOrEmpty(model.Name))
+            {
+                // You might need to add a 'Name' property to IdentityUser
+                // For now, we'll skip or you can store in claims
+            }
+
+            // Update Role if provided
+            if (!string.IsNullOrEmpty(model.Role))
+            {
+                var currentRoles = await _userManager.GetRolesAsync(user);
+                await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                await _userManager.AddToRoleAsync(user, model.Role);
+            }
+
+            // Update Password if provided
+            if (!string.IsNullOrEmpty(model.Password))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var resetResult = await _userManager.ResetPasswordAsync(user, token, model.Password);
+                if (!resetResult.Succeeded)
+                    return BadRequest(resetResult.Errors);
+            }
+
+            // Save user changes
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+                return BadRequest(updateResult.Errors);
+
+            // Get updated roles
+            var updatedRoles = await _userManager.GetRolesAsync(user);
+
+            return Ok(new UserResponseDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                Roles = updatedRoles.ToList()
+            });
         }
 
         [Authorize(Roles = "Admin")]
@@ -152,9 +228,12 @@ namespace HenriTrips.Api.Controllers
 
             return Ok(new { Message = "User deleted successfully" });
         }
+
+
     }
 
-    // DTOs
+    // ========== DTOs ==========
+
     public class RegisterModel
     {
         public string Email { get; set; } = null!;
@@ -174,6 +253,14 @@ namespace HenriTrips.Api.Controllers
         public string Role { get; set; } = null!;
     }
 
+    public class UpdateUserModel
+    {
+        public string? Email { get; set; }
+        public string? Name { get; set; }
+        public string? Role { get; set; }
+        public string? Password { get; set; }
+    }
+
     public class UserResponseDto
     {
         public string Id { get; set; } = null!;
@@ -182,3 +269,190 @@ namespace HenriTrips.Api.Controllers
         public List<string> Roles { get; set; } = new();
     }
 }
+
+
+
+//using HenriTrips.Api.Data;
+//using Microsoft.AspNetCore.Authorization;
+//using Microsoft.AspNetCore.Identity;
+//using Microsoft.AspNetCore.Mvc;
+//using Microsoft.IdentityModel.Tokens;
+//using System.IdentityModel.Tokens.Jwt;
+//using System.Security.Claims;
+//using System.Text;
+
+//namespace HenriTrips.Api.Controllers
+//{
+//    [Route("api/[controller]")]
+//    [ApiController]
+//    public class AuthController : ControllerBase
+//    {
+//        private readonly UserManager<IdentityUser> _userManager;
+//        private readonly SignInManager<IdentityUser> _signInManager;
+//        private readonly IConfiguration _configuration;
+
+//        public AuthController(
+//            UserManager<IdentityUser> userManager,
+//            SignInManager<IdentityUser> signInManager,
+//            IConfiguration configuration)
+//        {
+//            _userManager = userManager;
+//            _signInManager = signInManager;
+//            _configuration = configuration;
+//        }
+
+//        [HttpPost("register")]
+//        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+//        {
+//            var user = new IdentityUser
+//            {
+//                UserName = model.Email,
+//                Email = model.Email
+//            };
+
+//            var result = await _userManager.CreateAsync(user, model.Password);
+
+//            if (!result.Succeeded)
+//                return BadRequest(result.Errors);
+
+//            await _userManager.AddToRoleAsync(user, "User");
+
+//            return Ok(new { Message = "User created successfully!" });
+//        }
+
+//        [HttpPost("login")]
+//        public async Task<IActionResult> Login([FromBody] LoginModel model)
+//        {
+//            var user = await _userManager.FindByEmailAsync(model.Email);
+//            if (user == null)
+//                return Unauthorized("Invalid email or password");
+
+//            var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+//            if (!result.Succeeded)
+//                return Unauthorized("Invalid email or password");
+
+//            var token = await GenerateJwtToken(user);
+//            return Ok(new { token });
+//        }
+
+//        private async Task<string> GenerateJwtToken(IdentityUser user)
+//        {
+//            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:SecretKey"]);
+//            var tokenHandler = new JwtSecurityTokenHandler();
+//            var roles = await _userManager.GetRolesAsync(user);
+
+//            var claims = new List<Claim>
+//            {
+//                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+//                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+//                new Claim(ClaimTypes.Name, user.UserName),
+//                new Claim(ClaimTypes.NameIdentifier, user.Id)
+//            };
+
+//            foreach (var role in roles)
+//            {
+//                claims.Add(new Claim(ClaimTypes.Role, role));
+//            }
+
+//            var tokenDescriptor = new SecurityTokenDescriptor
+//            {
+//                Subject = new ClaimsIdentity(claims),
+//                Expires = DateTime.UtcNow.AddDays(7),
+//                Issuer = _configuration["Jwt:Issuer"],
+//                Audience = _configuration["Jwt:Audience"],
+//                SigningCredentials = new SigningCredentials(
+//                    new SymmetricSecurityKey(key),
+//                    SecurityAlgorithms.HmacSha256Signature)
+//            };
+
+//            var token = tokenHandler.CreateToken(tokenDescriptor);
+//            return tokenHandler.WriteToken(token);
+//        }
+
+//        // ADD THESE ADMIN ENDPOINTS:
+
+//        [Authorize(Roles = "Admin")]
+//        [HttpGet("users")]
+//        public async Task<IActionResult> GetAllUsers()
+//        {
+//            var users = _userManager.Users.ToList();
+//            var userDtos = new List<UserResponseDto>();
+
+//            foreach (var user in users)
+//            {
+//                var roles = await _userManager.GetRolesAsync(user);
+//                userDtos.Add(new UserResponseDto
+//                {
+//                    Id = user.Id,
+//                    Email = user.Email,
+//                    UserName = user.UserName,
+//                    Roles = roles.ToList()
+//                });
+//            }
+
+//            return Ok(userDtos);
+//        }
+
+//        [Authorize(Roles = "Admin")]
+//        [HttpPost("create-user")]
+//        public async Task<IActionResult> CreateUser([FromBody] CreateUserModel model)
+//        {
+//            var user = new IdentityUser
+//            {
+//                UserName = model.Email,
+//                Email = model.Email
+//            };
+
+//            var result = await _userManager.CreateAsync(user, model.Password);
+//            if (!result.Succeeded)
+//                return BadRequest(result.Errors);
+
+//            await _userManager.AddToRoleAsync(user, model.Role);
+
+//            return Ok(new { Message = $"User created with {model.Role} role" });
+//        }
+
+//        [Authorize(Roles = "Admin")]
+//        [HttpDelete("delete-user/{userId}")]
+//        public async Task<IActionResult> DeleteUser(string userId)
+//        {
+//            var user = await _userManager.FindByIdAsync(userId);
+//            if (user == null)
+//                return NotFound("User not found");
+
+//            var result = await _userManager.DeleteAsync(user);
+//            if (!result.Succeeded)
+//                return BadRequest(result.Errors);
+
+//            return Ok(new { Message = "User deleted successfully" });
+//        }
+//    }
+
+//    // DTOs
+//    public class RegisterModel
+//    {
+//        public string Email { get; set; } = null!;
+//        public string Password { get; set; } = null!;
+//    }
+
+//    public class LoginModel
+//    {
+//        public string Email { get; set; } = null!;
+//        public string Password { get; set; } = null!;
+//    }
+
+//    public class CreateUserModel
+//    {
+//        public string Email { get; set; } = null!;
+//        public string Password { get; set; } = null!;
+//        public string Role { get; set; } = null!;
+//    }
+
+//    public class UserResponseDto
+//    {
+//        public string Id { get; set; } = null!;
+//        public string Email { get; set; } = null!;
+//        public string UserName { get; set; } = null!;
+//        public List<string> Roles { get; set; } = new();
+//    }
+//}
