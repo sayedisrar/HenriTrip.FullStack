@@ -2,8 +2,9 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { UserService, User } from '../../../core/services/user.service';
-import { GuideService, Guide } from '../../../core/services/guide.service';
+import { UserService, User } from '../../../../../core/services/user.service';
+import { GuideService, Guide } from '../../../../../core/services/guide.service';
+
 
 @Component({
   selector: 'app-user-form',

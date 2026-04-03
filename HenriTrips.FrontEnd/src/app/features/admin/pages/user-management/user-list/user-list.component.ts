@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { UserService, User } from '../../../core/services/user.service';
+import { UserService, User } from '../../../../../core/services/user.service';
 
 @Component({
   selector: 'app-user-list',
