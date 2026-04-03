@@ -1,14 +1,26 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
 
-import { AdminRoutingModule } from './admin-routing.module';
+export interface RegisterRequest {
+  email: string;
+  password: string;
+}
 
+export interface AuthResponse {
+  token: string;
+}
 
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    AdminRoutingModule
-  ]
-})
-export class AdminModule { }
+export interface UserResponse {
+  id: string;
+  email: string;
+  userName: string;
+  roles: string[];
+}
+
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  role: 'Admin' | 'User';
+}

@@ -2,7 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
-
+import { environment } from '../../../environments/environment';
 export interface User {
   id: string;
   name: string;
@@ -17,7 +17,8 @@ export interface User {
 export class AuthService {
   private http = inject(HttpClient);
   // Default fallback API url. Replace with configuration in the future.
-  private apiUrl = 'https://localhost:7079/api/auth';
+  //private apiUrl = 'https://localhost:7079/api/auth';
+  private apiUrl = `${environment.apiUrl}/Auth`;
   
   currentUser = signal<User | null>(null);
 
