@@ -19,8 +19,11 @@ import { AuthService } from '../../../core/services/auth.service';
         <div class="search-box">
           <input type="text" class="form-control" placeholder="Search guides..." (input)="onSearch($event)">
         </div>
-        <a routerLink="/dashboard/guides/new" class="btn btn-primary" *ngIf="auth.isAdmin()">
-          <span class="material-symbols">add</span> Create Guide
+        <a routerLink="/dashboard/guides/new" class="btn-primary" *ngIf="auth.isAdmin()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Create Guide
         </a>
       </div>
     </div>
@@ -33,7 +36,11 @@ import { AuthService } from '../../../core/services/auth.service';
         <div class="guide-card-content" [routerLink]="['/dashboard/guides', guide.id]">
           <div class="guide-image" [style.background-image]="'url(' + (guide.imageUrl || 'https://images.unsplash.com/photo-1542314831-c6a4d14ebb40?auto=format&fit=crop&q=80&w=600') + ')'">
             <div class="guide-duration">
-              <span class="material-symbols">schedule</span> {{ guide.days }} Days
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {{ guide.days }} Days
             </div>
           </div>
           
@@ -49,18 +56,32 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
 
         <div class="admin-actions" *ngIf="auth.isAdmin()">
-          <button class="btn btn-outline btn-sm action-btn" [routerLink]="['/dashboard/guides', guide.id, 'edit']">
-            <span class="material-symbols">edit</span> Edit
+          <button class="btn-edit" [routerLink]="['/dashboard/guides', guide.id, 'edit']">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 3l4 4-7 7H10v-4l7-7z"/>
+              <path d="M4 20h16"/>
+            </svg>
+            Edit
           </button>
-          <button class="btn btn-outline btn-sm action-btn danger" (click)="deleteGuide(guide.id, $event)">
-            <span class="material-symbols">delete</span> Delete
+          <button class="btn-delete" (click)="deleteGuide(guide.id, $event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7h16"/>
+              <path d="M10 11v6"/>
+              <path d="M14 11v6"/>
+              <path d="M5 7l1 13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-13"/>
+              <path d="M9 3h6"/>
+            </svg>
+            Delete
           </button>
         </div>
       </div>
     </div>
 
     <div *ngIf="filteredGuides.length === 0" class="glass-panel empty-state slide-up">
-      <span class="material-symbols" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">search_off</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-bottom: 1rem;">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
       <h3>No guides found</h3>
       <p>Try adjusting your search criteria or contact an admin if you believe you should have access.</p>
     </div>
@@ -87,6 +108,44 @@ import { AuthService } from '../../../core/services/auth.service';
       max-width: 300px;
       min-width: 250px;
     }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Master Primary Button */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark, #7c3aed));
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      transition: all 0.2s;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -10px var(--primary);
+    }
     
     .guides-grid {
       display: grid;
@@ -99,6 +158,12 @@ import { AuthService } from '../../../core/services/auth.service';
       display: flex;
       flex-direction: column;
       height: 100%;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .guide-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.3);
     }
     
     .guide-card-content {
@@ -138,12 +203,21 @@ import { AuthService } from '../../../core/services/auth.service';
       flex: 1;
     }
     
+    .guide-content h3 {
+      margin-bottom: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
     .description {
       flex: 1;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 1rem;
     }
     
     .tags {
@@ -153,37 +227,69 @@ import { AuthService } from '../../../core/services/auth.service';
       margin-top: 1rem;
     }
 
+    /* Master Badge Styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .badge-primary {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+    
+    .badge-success {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    /* Master Admin Actions Buttons */
     .admin-actions {
       display: flex;
       border-top: 1px solid var(--surface-border);
       background: rgba(15, 23, 42, 0.2);
     }
 
-    .action-btn {
+    .btn-edit, .btn-delete {
       flex: 1;
-      border: none;
-      border-radius: 0;
-      border-right: 1px solid var(--surface-border);
-      display: flex;
+      display: inline-flex;
+      align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
       background: transparent;
-      padding: 1rem;
+      text-decoration: none;
     }
     
-    .action-btn:last-child {
-      border-right: none;
+    .btn-edit {
+      color: #60a5fa;
+      border-right: 1px solid var(--surface-border);
     }
 
-    .action-btn:hover {
-      background: rgba(255, 255, 255, 0.05);
+    .btn-edit:hover {
+      background: rgba(96, 165, 250, 0.1);
+    }
+    
+    .btn-delete {
+      color: #f87171;
     }
 
-    .action-btn.danger:hover {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
+    .btn-delete:hover {
+      background: rgba(248, 113, 113, 0.1);
     }
 
+    /* Empty State */
     .empty-state {
       padding: 4rem 2rem;
       text-align: center;
@@ -191,12 +297,42 @@ import { AuthService } from '../../../core/services/auth.service';
       flex-direction: column;
       align-items: center;
     }
+
+    .empty-state h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1.25rem;
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .guide-list-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .actions-group {
+        justify-content: stretch;
+      }
+      
+      .search-box {
+        max-width: none;
+        min-width: auto;
+      }
+      
+      .guides-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   `]
 })
 export class GuideListComponent implements OnInit {
   private guideService = inject(GuideService);
   auth = inject(AuthService);
-  
+
   guides: Guide[] = [];
   filteredGuides: Guide[] = [];
   searchQuery = '';
@@ -206,11 +342,15 @@ export class GuideListComponent implements OnInit {
   }
 
   loadGuides() {
-    this.guideService.getGuides().subscribe(guides => {
-      this.guides = guides;
-      this.filteredGuides = guides;
-      // Re-apply search filter
-      this.applyFilter();
+    this.guideService.getGuides().subscribe({
+      next: (guides) => {
+        this.guides = guides;
+        this.filteredGuides = guides;
+        this.applyFilter();
+      },
+      error: (error) => {
+        console.error('Error loading guides:', error);
+      }
     });
   }
 
@@ -225,18 +365,25 @@ export class GuideListComponent implements OnInit {
       this.filteredGuides = this.guides;
       return;
     }
-    
-    this.filteredGuides = this.guides.filter(g => 
+
+    this.filteredGuides = this.guides.filter(g =>
       g.title.toLowerCase().includes(this.searchQuery) ||
       g.description.toLowerCase().includes(this.searchQuery)
     );
   }
 
   deleteGuide(id: string, event: Event) {
-    event.stopPropagation(); // prevent navigating to guide details
+    event.stopPropagation();
     if (confirm('Are you sure you want to delete this guide and all its activities?')) {
-      this.guideService.deleteGuide(id);
-      this.loadGuides(); // refresh list
+      this.guideService.deleteGuide(id).subscribe({
+        next: () => {
+          this.loadGuides();
+        },
+        error: (error) => {
+          console.error('Error deleting guide:', error);
+          alert('Failed to delete guide. Please try again.');
+        }
+      });
     }
   }
 }

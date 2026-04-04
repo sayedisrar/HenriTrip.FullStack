@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [CommonModule],
   template: `
     <div class="activities-timeline">
+    
       <div *ngFor="let act of activities; let j = index" 
            class="activity-item fade-in" 
            [style.animation-delay]="j * 0.1 + 's'">
