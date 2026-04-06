@@ -44,6 +44,34 @@ A full-stack travel guide management platform that allows administrators to crea
 - .NET SDK 8.0
 - SQL Server
 
+## Database
+
+The solution includes a **`database`** directory containing the following files:
+
+- `HenriTrips.sql` – SQL script to create and populate the database.  
+- `HenriTrips.bak` – SQL Server backup file of the database.
+
+### Setup Instructions
+
+#### Option 1: Using the SQL Script (Recommended)
+1. Open **SQL Server Management Studio (SSMS)** or any SQL client.  
+2. Run `HenriTrips.sql` to create the database and populate its tables.  
+
+#### Option 2: Using the Backup File (`.bak`)
+1. Open **SSMS**.  
+2. Restore the database using `HenriTrips.bak`.  
+3. The database will include all tables and data as in the backup.
+
+### Default Users
+The database comes with **predefined users** for testing:
+
+| Email             | Password     | Role           |
+|------------------|-------------|----------------|
+| Admin@gmail.com   | Admin@123   | Administrator  |
+| User@gmail.com    | User@123    | Standard User  |
+
+> Both setup methods (`.sql` or `.bak`) include these default users so you can log in immediately and test the application.
+
 ## 🔧 Installation
 
 ### 1. Clone the Repository
