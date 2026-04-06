@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HenriTrips.Api.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<IdentityUser>  // Change this line
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>   
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
