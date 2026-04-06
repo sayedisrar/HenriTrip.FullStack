@@ -24,7 +24,6 @@ namespace HenriTrips.Api.Controllers
             _userManager = userManager;
         }
 
-
         // GET: api/guides
         [HttpGet]
         public async Task<IActionResult> GetGuides()
@@ -65,7 +64,7 @@ namespace HenriTrips.Api.Controllers
                             Id = a.Id,
                             Title = a.Title,
                             Description = a.Description,
-                            CategoryCategory = a.CategoryCategory,
+                            CategoryCategory = (int)a.CategoryCategory,
                             Address = a.Address,
                             Phone = a.Phone,
                             Schedule = a.Schedule,
@@ -114,7 +113,7 @@ namespace HenriTrips.Api.Controllers
                         Id = a.Id,
                         Title = a.Title,
                         Description = a.Description,
-                        CategoryCategory = a.CategoryCategory,
+                        CategoryCategory = (int)a.CategoryCategory,
                         Address = a.Address,
                         Phone = a.Phone,
                         Schedule = a.Schedule,
@@ -233,7 +232,9 @@ namespace HenriTrips.Api.Controllers
             return Ok(new { Message = "User removed from guide" });
         }
 
-        // Activity endpoints
+        // ========== ACTIVITY ENDPOINTS (FIXED - RETURN DTOs) ==========
+
+        // POST: api/guides/activity
         [Authorize(Roles = "Admin")]
         [HttpPost("activity")]
         public async Task<IActionResult> AddActivity(ActivityCreateDto dto)
@@ -259,9 +260,23 @@ namespace HenriTrips.Api.Controllers
             _context.Activities.Add(activity);
             await _context.SaveChangesAsync();
 
-            return Ok(activity);
+            // Return DTO without circular reference
+            return Ok(new ActivityResponseDto
+            {
+                Id = activity.Id,
+                Title = activity.Title,
+                Description = activity.Description,
+                CategoryCategory = (int)activity.CategoryCategory,
+                Address = activity.Address,
+                Phone = activity.Phone,
+                Schedule = activity.Schedule,
+                Website = activity.Website,
+                Order = activity.Order,
+                Day = activity.Day
+            });
         }
 
+        // PUT: api/guides/activity/{activityId}
         [Authorize(Roles = "Admin")]
         [HttpPut("activity/{activityId}")]
         public async Task<IActionResult> UpdateActivity(int activityId, ActivityCreateDto dto)
@@ -281,9 +296,24 @@ namespace HenriTrips.Api.Controllers
             activity.Day = dto.Day;
 
             await _context.SaveChangesAsync();
-            return Ok(activity);
+
+            // Return DTO without circular reference
+            return Ok(new ActivityResponseDto
+            {
+                Id = activity.Id,
+                Title = activity.Title,
+                Description = activity.Description,
+                CategoryCategory = (int)activity.CategoryCategory,
+                Address = activity.Address,
+                Phone = activity.Phone,
+                Schedule = activity.Schedule,
+                Website = activity.Website,
+                Order = activity.Order,
+                Day = activity.Day
+            });
         }
 
+        // DELETE: api/guides/activity/{activityId}
         [Authorize(Roles = "Admin")]
         [HttpDelete("activity/{activityId}")]
         public async Task<IActionResult> DeleteActivity(int activityId)
@@ -298,7 +328,9 @@ namespace HenriTrips.Api.Controllers
             return Ok(new { Message = "Activity deleted successfully" });
         }
 
-        // Add to GuidesController.cs - GET user's invited guides
+        // ========== HELPER ENDPOINTS ==========
+
+        // GET: api/guides/user/{userId}/invited-guides
         [Authorize(Roles = "Admin")]
         [HttpGet("user/{userId}/invited-guides")]
         public async Task<IActionResult> GetUserInvitedGuides(string userId)
@@ -311,9 +343,86 @@ namespace HenriTrips.Api.Controllers
                 .Where(gu => gu.UserId == userId)
                 .Select(gu => gu.GuideId.ToString())
                 .ToListAsync();
-
             return Ok(invitedGuideIds);
         }
- 
+
+        // GET: api/guides/{guideId}/activities
+        [HttpGet("{guideId}/activities")]
+        public async Task<IActionResult> GetActivitiesByGuideId(int guideId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+
+            // Check if user has access to this guide
+            var guide = await _context.Guides
+                .Include(g => g.GuideUsers)
+                .FirstOrDefaultAsync(g => g.Id == guideId);
+
+            if (guide == null)
+                return NotFound("Guide not found");
+
+            if (!isAdmin && !guide.GuideUsers.Any(gu => gu.UserId == userId))
+                return Forbid();
+
+            var activities = await _context.Activities
+                .Where(a => a.GuideId == guideId)
+                .OrderBy(a => a.Day)
+                .ThenBy(a => a.Order)
+                .Select(a => new ActivityResponseDto
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Description = a.Description,
+                    CategoryCategory = (int)a.CategoryCategory,
+                    Address = a.Address,
+                    Phone = a.Phone,
+                    Schedule = a.Schedule,
+                    Website = a.Website,
+                    Order = a.Order,
+                    Day = a.Day
+                })
+                .ToListAsync();
+
+            return Ok(activities);
+        }
+
+        // GET: api/guides/{guideId}/activities/day/{day}
+        [HttpGet("{guideId}/activities/day/{day}")]
+        public async Task<IActionResult> GetActivitiesByGuideIdAndDay(int guideId, int day)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+
+            // Check if user has access to this guide
+            var guide = await _context.Guides
+                .Include(g => g.GuideUsers)
+                .FirstOrDefaultAsync(g => g.Id == guideId);
+
+            if (guide == null)
+                return NotFound("Guide not found");
+
+            if (!isAdmin && !guide.GuideUsers.Any(gu => gu.UserId == userId))
+                return Forbid();
+
+            var activities = await _context.Activities
+                .Where(a => a.GuideId == guideId && a.Day == day)
+                .OrderBy(a => a.Order)
+                .Select(a => new ActivityResponseDto
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Description = a.Description,
+                    CategoryCategory = (int)a.CategoryCategory,
+                    Address = a.Address,
+                    Phone = a.Phone,
+                    Schedule = a.Schedule,
+                    Website = a.Website,
+                    Order = a.Order,
+                    Day = a.Day
+                })
+                .ToListAsync();
+
+            return Ok(activities);
+        }
     }
 }

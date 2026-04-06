@@ -7,7 +7,7 @@ namespace HenriTrips.Api.DTOs.Activity
         public int Id { get; set; }
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
-        public ActivityCategory CategoryCategory { get; set; }
+        public int CategoryCategory { get; set; }  // ← CHANGE THIS FROM ActivityCategory TO int
         public string Address { get; set; } = null!;
         public string Phone { get; set; } = null!;
         public string Schedule { get; set; } = null!;
