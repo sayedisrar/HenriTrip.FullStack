@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/database/">
+    <File Path="../../../Program Files/Microsoft SQL Server/MSSQL16.MSSQLSERVER/MSSQL/Backup/HenriTrips.bak" />
+    <File Path="../../../Users/sayed/OneDrive/Documents/HenriTrips.sql" />
+    <File Path="ReadMe.md" />
+  </Folder>
   <Project Path="HenriTrips.Api/HenriTrips.Api.csproj" Id="f100d6ae-45cf-4d2a-960c-fa74f9419372" />
   <Project Path="HenriTrips.FrontEnd/" Type="Website" DisplayName="HenriTrips.FrontEnd(1)">
     <BuildType Project="Debug" />
