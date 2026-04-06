@@ -66,7 +66,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalDev", policy =>
-        policy.WithOrigins("http://localhost:4200") // frontend origin
+        policy.WithOrigins("http://localhost:4200", "http://127.0.0.1:8080") // frontend origin
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());

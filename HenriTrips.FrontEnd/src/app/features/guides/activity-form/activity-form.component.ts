@@ -28,14 +28,14 @@ import { ActivityService, Activity } from '../../../core/services/activity.servi
           
           <div class="form-group" style="flex: 1;">
             <label class="form-label">Category *</label>
-            <select class="form-control" formControlName="category" required>
-              <option value="" disabled>Select Category</option>
-              <option value="museum">🏛️ Museum</option>
-              <option value="castle">🏰 Castle</option>
-              <option value="activity">🎯 Activity</option>
-              <option value="park">🌳 Park</option>
-              <option value="cave">🪨 Cave</option>
-            </select>
+    <select class="form-control" formControlName="category" required>
+  <option value="" disabled>Select Category</option>
+  <option value="museum">🏛️ Museum</option>
+  <option value="park">🌳 Park</option>
+  <option value="restaurant">🍽️ Restaurant</option>
+  <option value="beach">🏖️ Beach</option>
+  <option value="other">📌 Other</option>
+</select>
           </div>
         </div>
 
