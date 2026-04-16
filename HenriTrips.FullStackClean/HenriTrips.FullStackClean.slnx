@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HenriTrips.Api/HenriTrips.Api.csproj" />
+    <Project Path="src/HenriTrips.Application/HenriTrips.Application.csproj" />
+    <Project Path="src/HenriTrips.Domain/HenriTrips.Domain.csproj" />
+    <Project Path="src/HenriTrips.Infrastructure/HenriTrips.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HenriTrips.IntegrationTests/HenriTrips.IntegrationTests.csproj" />
+    <Project Path="tests/HenriTrips.UnitTests/HenriTrips.UnitTests.csproj" />
+  </Folder>
+</Solution>
