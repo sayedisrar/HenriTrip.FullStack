@@ -7,11 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\Auth\" />
+    <Folder Include="UseCases\Activities\" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HenriTrips.Domain\HenriTrips.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
   </ItemGroup>
 
 </Project>

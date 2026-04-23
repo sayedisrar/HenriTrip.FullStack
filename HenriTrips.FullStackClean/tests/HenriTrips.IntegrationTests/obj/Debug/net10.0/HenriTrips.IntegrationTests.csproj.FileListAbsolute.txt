@@ -94,3 +94,5 @@ C:\Projects\HenriTripFullStack\HenriTrips.FullStackClean\tests\HenriTrips.Integr
 C:\Projects\HenriTripFullStack\HenriTrips.FullStackClean\tests\HenriTrips.IntegrationTests\obj\Debug\net10.0\HenriTrips.IntegrationTests.pdb
 C:\Projects\HenriTripFullStack\HenriTrips.FullStackClean\tests\HenriTrips.IntegrationTests\obj\Debug\net10.0\HenriTrips.IntegrationTests.genruntimeconfig.cache
 C:\Projects\HenriTripFullStack\HenriTrips.FullStackClean\tests\HenriTrips.IntegrationTests\obj\Debug\net10.0\ref\HenriTrips.IntegrationTests.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\tests\HenriTrips.IntegrationTests\obj\Debug\net10.0\HenriTrips.IntegrationTests.csproj.AssemblyReference.cache
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\tests\HenriTrips.IntegrationTests\obj\Debug\net10.0\HenriTrips.IntegrationTests.GeneratedMSBuildEditorConfig.editorconfig

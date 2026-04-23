@@ -1,41 +1,102 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using HenriTrips.Api.Middleware;
+using HenriTrips.Application.Interfaces;
+using HenriTrips.Application.UseCases.Activities;
+using HenriTrips.Application.UseCases.Guides;
+using HenriTrips.Application.Validators.Guide;
+using HenriTrips.Infrastructure.Data;
+using HenriTrips.Infrastructure.Identity;
+using HenriTrips.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+#region CONNECTION STRING
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Missing DefaultConnection string");
+#endregion
+
+#region DB CONTEXT
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+#endregion
+
+#region IDENTITY
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+#endregion
+
+#region AUTH SERVICE
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<TokenService>();
+#endregion
+
+#region REPOSITORIES
+builder.Services.AddScoped<IGuideRepository, GuideRepository>();
+builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
+#endregion
+
+#region USE CASES - GUIDES
+builder.Services.AddScoped<GetGuides>();
+builder.Services.AddScoped<GetGuideById>();
+builder.Services.AddScoped<CreateGuide>();
+builder.Services.AddScoped<UpdateGuide>();
+builder.Services.AddScoped<DeleteGuide>();
+builder.Services.AddScoped<InviteUser>();
+#endregion
+
+#region USE CASES - ACTIVITIES
+builder.Services.AddScoped<CreateActivity>();
+builder.Services.AddScoped<UpdateActivity>();
+builder.Services.AddScoped<DeleteActivity>();
+builder.Services.AddScoped<GetActivitiesByGuideId>();
+#endregion
+
+#region CONTROLLERS + SWAGGER
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+#endregion
+
+#region FLUENT VALIDATION
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining(typeof(GuideCreateDtoValidator));
+#endregion
+
+#region LOGGING
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+#endregion
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+#region AUTO MIGRATION (CRITICAL FIX FOR DOCKER)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+#endregion
+
+#region MIDDLEWARE PIPELINE
+app.UseMiddleware<ExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
+// ⚠️ IMPORTANT ORDER
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapControllers();
+#endregion
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

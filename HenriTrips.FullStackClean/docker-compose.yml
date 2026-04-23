@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: henritrips-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Admin@12345!
+    ports:
+      - "1433:1433"
+
+  api:
+    build:
+      context: .
+      dockerfile: src/HenriTrips.Api/Dockerfile
+    container_name: henritrips-api
+    ports:
+      - "5000:8080"
+    depends_on:
+      - sqlserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+      # DB CONNECTION (IMPORTANT)
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=HenriTrips;User Id=sa;Password=Admin@12345!;TrustServerCertificate=True;
+
+      # JWT
+      - Jwt__SecretKey=SUPER_SECRET_KEY_123456
+      - Jwt__Issuer=HenriTrips
+      - Jwt__Audience=HenriTripsUsers

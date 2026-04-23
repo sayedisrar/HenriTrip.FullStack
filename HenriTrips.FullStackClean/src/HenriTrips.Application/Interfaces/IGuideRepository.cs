@@ -9,4 +9,6 @@ public interface IGuideRepository
     Task AddAsync(Guide guide);
     Task UpdateAsync(Guide guide);
     Task DeleteAsync(int id);
+    
+    Task AddUserToGuide(string userId, int guideId);
 }

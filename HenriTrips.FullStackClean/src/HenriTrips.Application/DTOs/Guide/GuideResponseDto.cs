@@ -1,6 +1,6 @@
 ﻿using HenriTrips.Application.DTOs.Activity;
 
-namespace HenriTrips.Api.DTOs.Guide
+namespace HenriTrips.Application.DTOs.Guide
 {
     public class GuideResponseDto
     {

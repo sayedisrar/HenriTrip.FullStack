@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "HRtP9sXpmuQ=",
+  "dgSpecHash": "ywJVVJ4QT3Q=",
   "success": true,
   "projectFilePath": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.FullStackClean\\src\\HenriTrips.Application\\HenriTrips.Application.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\sayed\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512"
+  ],
   "logs": []
 }
