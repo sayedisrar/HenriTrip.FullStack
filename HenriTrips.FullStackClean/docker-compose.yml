@@ -1,31 +1,37 @@
-version: '3.8'
-
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: henritrips-db
+    restart: unless-stopped
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=Admin@12345!
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Admin@12345!"
     ports:
       - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
 
   api:
     build:
       context: .
       dockerfile: src/HenriTrips.Api/Dockerfile
     container_name: henritrips-api
+    restart: unless-stopped
     ports:
       - "5000:8080"
     depends_on:
       - sqlserver
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      ASPNETCORE_ENVIRONMENT: "Production"
 
-      # DB CONNECTION (IMPORTANT)
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=HenriTrips;User Id=sa;Password=Admin@12345!;TrustServerCertificate=True;
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=HenriTrips;User Id=sa;Password=Admin@12345!;TrustServerCertificate=True;"
 
-      # JWT
-      - Jwt__SecretKey=SUPER_SECRET_KEY_123456
-      - Jwt__Issuer=HenriTrips
-      - Jwt__Audience=HenriTripsUsers
+      Jwt__SecretKey: "7f3c9a1b8e2d4f6a9c0d1e3f5a7b9c2d4e6f8a1b3c5d7e9f0a2b4c6d8e0f1a2"
+      Jwt__Issuer: "HenriTrips"
+      Jwt__Audience: "HenriTripsUsers"
+
+volumes:
+  sql_data:
+
+
+ 
