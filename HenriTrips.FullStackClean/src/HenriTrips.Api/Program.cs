@@ -73,22 +73,34 @@ builder.Logging.AddConsole();
 
 var app = builder.Build();
 
-#region AUTO MIGRATION (CRITICAL FIX FOR DOCKER)
+#region AUTO MIGRATION + SEED (PRODUCTION SAFE)
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+
+        // 🔥 Seed admin user
+        await DbSeeder.SeedAdminAsync(services);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Migration or seeding failed");
+        throw;
+    }
 }
 #endregion
 
 #region MIDDLEWARE PIPELINE
 app.UseMiddleware<ExceptionMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// ✅ Swagger ALWAYS enabled (for client/demo)
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // ⚠️ IMPORTANT ORDER
 app.UseHttpsRedirection();
@@ -97,6 +109,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// ✅ Health check endpoint
+app.MapGet("/health", () => Results.Ok("Healthy"));
+
 #endregion
 
 app.Run();
