@@ -1,4 +1,4 @@
-﻿namespace HenriTrips.IntegrationTests;
+namespace HenriTrips.IntegrationTests;
 
 public class UnitTest1
 {

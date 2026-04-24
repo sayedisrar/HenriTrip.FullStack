@@ -1,4 +1,4 @@
-﻿namespace HenriTrips.UnitTests;
+namespace HenriTrips.UnitTests;
 
 public class UnitTest1
 {

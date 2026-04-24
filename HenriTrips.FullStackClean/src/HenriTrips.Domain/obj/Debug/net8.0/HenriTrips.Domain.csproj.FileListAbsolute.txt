@@ -1,0 +1,12 @@
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\bin\Debug\net8.0\HenriTrips.Domain.deps.json
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\bin\Debug\net8.0\HenriTrips.Domain.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\bin\Debug\net8.0\HenriTrips.Domain.pdb
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\HenriTrips.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\HenriTrips.Domain.AssemblyInfoInputs.cache
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\HenriTrips.Domain.AssemblyInfo.cs
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\HenriTrips.Domain.csproj.CoreCompileInputs.cache
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\HenriTrips.Domain.sourcelink.json
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\HenriTrips.Domain.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\refint\HenriTrips.Domain.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\HenriTrips.Domain.pdb
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Domain\obj\Debug\net8.0\ref\HenriTrips.Domain.dll

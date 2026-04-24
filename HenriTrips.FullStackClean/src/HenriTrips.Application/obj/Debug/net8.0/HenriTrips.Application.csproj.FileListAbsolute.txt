@@ -1,0 +1,16 @@
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\bin\Debug\net8.0\HenriTrips.Application.deps.json
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\bin\Debug\net8.0\HenriTrips.Application.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\bin\Debug\net8.0\HenriTrips.Application.pdb
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\bin\Debug\net8.0\HenriTrips.Domain.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\bin\Debug\net8.0\HenriTrips.Domain.pdb
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTrips.Application.csproj.AssemblyReference.cache
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTrips.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTrips.Application.AssemblyInfoInputs.cache
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTrips.Application.AssemblyInfo.cs
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTrips.Application.csproj.CoreCompileInputs.cache
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTrips.Application.sourcelink.json
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTri.A3C94FCF.Up2Date
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTrips.Application.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\refint\HenriTrips.Application.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\HenriTrips.Application.pdb
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Application\obj\Debug\net8.0\ref\HenriTrips.Application.dll
