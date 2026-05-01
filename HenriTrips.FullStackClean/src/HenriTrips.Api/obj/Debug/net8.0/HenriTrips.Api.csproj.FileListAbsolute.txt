@@ -159,3 +159,4 @@ C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\HenriTrips.Api.pdb
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\HenriTrips.Api.genruntimeconfig.cache
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\ref\HenriTrips.Api.dll
+C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

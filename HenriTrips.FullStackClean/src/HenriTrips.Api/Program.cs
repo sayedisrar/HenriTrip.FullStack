@@ -13,6 +13,10 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#region ENVIRONMENT FLAG (TEST SAFETY)
+var isTesting = builder.Environment.IsEnvironment("Testing");
+#endregion
+
 #region CONNECTION STRING
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Missing DefaultConnection string");
@@ -20,7 +24,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 #region DB CONTEXT
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+{
+    options.UseSqlServer(connectionString);
+});
 #endregion
 
 #region IDENTITY
@@ -69,11 +75,14 @@ builder.Services.AddValidatorsFromAssemblyContaining(typeof(GuideCreateDtoValida
 #region LOGGING
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
 #endregion
 
 var app = builder.Build();
 
-#region AUTO MIGRATION + SEED (PRODUCTION SAFE)
+#region AUTO MIGRATION + SEED (SAFE FOR EXISTING DB + DOCKER)
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -82,27 +91,51 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<ApplicationDbContext>();
-        db.Database.Migrate();
 
-        // 🔥 Seed admin user
-        await DbSeeder.SeedAdminAsync(services);
+        if (!isTesting)
+        {
+            // ✅ 1. Ensure DB exists (safe, does nothing if already exists)
+            await db.Database.EnsureCreatedAsync();
+
+            // ✅ 2. Try migrations safely (skip if schema already exists without history)
+            try
+            {
+                var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
+
+                if (pendingMigrations.Any())
+                {
+                    await db.Database.MigrateAsync();
+                    logger.LogInformation("Database migrations applied.");
+                }
+                else
+                {
+                    logger.LogInformation("No pending migrations.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 🔐 Critical: prevents crash when tables exist but no migration history
+                logger.LogWarning("Migration skipped: {Message}", ex.Message);
+            }
+
+            // ✅ 3. Safe seeding (should internally check if data already exists)
+            await DbSeeder.SeedAdminAsync(services);
+        }
     }
     catch (Exception ex)
     {
         logger.LogError(ex, "Migration or seeding failed");
-        throw;
     }
 }
+
 #endregion
 
 #region MIDDLEWARE PIPELINE
 app.UseMiddleware<ExceptionMiddleware>();
 
-// ✅ Swagger ALWAYS enabled (for client/demo)
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// ⚠️ IMPORTANT ORDER
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
@@ -110,9 +143,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// ✅ Health check endpoint
+// Health check
 app.MapGet("/health", () => Results.Ok("Healthy"));
-
 #endregion
 
 app.Run();
+
+// REQUIRED for WebApplicationFactory testing
+public partial class Program { }

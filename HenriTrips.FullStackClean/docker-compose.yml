@@ -1,37 +1,47 @@
 services:
+
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: henritrips-db
     restart: unless-stopped
+
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "Admin@12345!"
-    ports:
-      - "1433:1433"
+      SA_PASSWORD: ${DB_PASSWORD}
+
     volumes:
       - sql_data:/var/opt/mssql
+
 
   api:
     build:
       context: .
       dockerfile: src/HenriTrips.Api/Dockerfile
+
     container_name: henritrips-api
     restart: unless-stopped
+
     ports:
       - "5000:8080"
+
     depends_on:
       - sqlserver
+
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
 
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=HenriTrips;User Id=sa;Password=Admin@12345!;TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=${DB_NAME};User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;"
 
-      Jwt__SecretKey: "7f3c9a1b8e2d4f6a9c0d1e3f5a7b9c2d4e6f8a1b3c5d7e9f0a2b4c6d8e0f1a2"
+      Jwt__SecretKey: ${JWT_SECRET}
       Jwt__Issuer: "HenriTrips"
       Jwt__Audience: "HenriTripsUsers"
 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
 volumes:
   sql_data:
-
-
- 
