@@ -1,9 +1,15 @@
 // src/app/core/services/auth.service.ts
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs/operators';
+import { map, catchError, throwError } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
+import { 
+  LoginRequest, 
+  RegisterRequest, 
+  LoginApiResponse,
+  RegisterApiResponse
+} from '../models/auth.models';
 
 export interface User {
   id: string;
@@ -37,18 +43,32 @@ export class AuthService {
     }
   }
 
-  register(model: any) {
-    return this.http.post(`${this.apiUrl}/register`, model);
+  register(model: RegisterRequest) {
+    return this.http.post<RegisterApiResponse>(`${this.apiUrl}/register`, model).pipe(
+      map(response => {
+        if (!response.success) {
+          throw new Error(response.message || 'Registration failed');
+        }
+        return response;
+      }),
+      catchError(this.handleError)
+    );
   }
 
-  login(model: any) {
-    return this.http.post<{ token: string }>(`${this.apiUrl}/login`, model).pipe(
-      tap(response => {
-        if (response.token) {
-          localStorage.setItem('henri_trips_jwt', response.token);
-          this.decodeAndSetUser(response.token);
+  login(model: LoginRequest) {
+    return this.http.post<LoginApiResponse>(`${this.apiUrl}/login`, model).pipe(
+      map(response => {
+        console.log('Login API response:', response);
+        
+        if (response.success && response.data) {
+          // Store token (response.data contains the token string)
+          localStorage.setItem('henri_trips_jwt', response.data);
+          this.decodeAndSetUser(response.data);
+          return { success: true, token: response.data };
         }
-      })
+        throw new Error(response.message || 'Login failed');
+      }),
+      catchError(this.handleError)
     );
   }
 
@@ -70,7 +90,6 @@ export class AuthService {
     return this.currentUser()?.role === 'admin';
   }
 
-  // Make this method public by removing 'private' keyword
   public isTokenExpired(token: string): boolean {
     try {
       const decoded: any = jwtDecode(token);
@@ -86,21 +105,70 @@ export class AuthService {
   private decodeAndSetUser(token: string) {
     try {
       const decoded: any = jwtDecode(token);
+      console.log('Decoded token:', decoded);
 
-      const roleClaim = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || decoded.role;
-      const email = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || decoded.email;
-      const name = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || email;
-      const id = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || decoded.sub;
+      // Handle different claim types
+      const roleClaim = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] 
+        || decoded.role 
+        || decoded['role'];
+      
+      const email = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] 
+        || decoded.email 
+        || decoded['email'];
+      
+      const name = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] 
+        || decoded.unique_name 
+        || decoded.name 
+        || email;
+      
+      const id = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] 
+        || decoded.sub 
+        || decoded.nameid 
+        || decoded['id'];
+
+      // Determine role (handle both string and array)
+      let role: 'admin' | 'user' = 'user';
+      if (roleClaim) {
+        if (Array.isArray(roleClaim)) {
+          role = roleClaim.some(r => r.toLowerCase() === 'admin') ? 'admin' : 'user';
+        } else {
+          role = roleClaim.toString().toLowerCase() === 'admin' ? 'admin' : 'user';
+        }
+      }
 
       this.currentUser.set({
         id: id || 'unknown',
         name: name || 'User',
-        email: email,
-        role: (roleClaim && roleClaim.toString().toLowerCase() === 'admin') ? 'admin' : 'user',
+        email: email || '',
+        role: role,
         invitedGuideIds: []
       });
+      
+      console.log('User set:', this.currentUser());
     } catch (e) {
+      console.error('Failed to decode token:', e);
       this.logout();
     }
+  }
+
+  private handleError(error: any) {
+    console.error('AuthService Error Details:', error);
+    
+    let errorMessage = 'An error occurred';
+    
+    if (error.error?.message) {
+      errorMessage = error.error.message;
+    } else if (error.error?.errors) {
+      const messages = Object.values(error.error.errors).flat();
+      errorMessage = messages.join(', ');
+    } else if (error.status === 401) {
+      errorMessage = 'Invalid email or password';
+    } else if (error.status === 0) {
+      errorMessage = 'Cannot connect to server. Please check if the API is running on port 5172 or 7173.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    return throwError(() => new Error(errorMessage));
   }
 }

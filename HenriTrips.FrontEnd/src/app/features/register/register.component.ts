@@ -3,6 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
+import { RegisterRequest } from '../../core/models/auth.models';
 
 @Component({
   selector: 'app-register',
@@ -98,22 +99,19 @@ export class RegisterComponent {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.auth.register(this.registerForm.value).subscribe({
-      next: (res: any) => {
+    const registerRequest: RegisterRequest = this.registerForm.value;
+
+    this.auth.register(registerRequest).subscribe({
+      next: (response: any) => {
         this.isLoading = false;
-        this.successMessage = res.message || 'Account created successfully!';
+        this.successMessage = response.message || 'Account created successfully!';
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 1500);
       },
       error: (err) => {
         this.isLoading = false;
-        // Parse .NET Identity Errors array if present
-        if (Array.isArray(err.error)) {
-           this.errorMessage = err.error.map((e: any) => e.description).join(' ');
-        } else {
-           this.errorMessage = err.error?.message || err.error || 'Registration failed.';
-        }
+        this.errorMessage = err.message || 'Registration failed. Please try again.';
       }
     });
   }

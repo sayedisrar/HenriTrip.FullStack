@@ -3,6 +3,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
+import { LoginRequest } from '../../core/models/auth.models';
 
 @Component({
   selector: 'app-login',
@@ -11,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <div class="login-container">
       <div class="glass-panel login-card slide-up">
-        <h2>Welcome to Henri Trips 1</h2>
+        <h2>Welcome to Henri Trips</h2>
         <p>Log in to plan your next adventure.</p>
         
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="margin-top: 2rem;">
@@ -88,7 +89,7 @@ export class LoginComponent implements OnInit {
       localStorage.getItem('redirect_url') ||
       '/dashboard';
 
-    // Check if session expired (ADD THIS BLOCK)
+    // Check if session expired
     if (this.route.snapshot.queryParams['sessionExpired'] === 'true') {
       this.errorMessage = 'Your session has expired. Please login again.';
     }
@@ -108,27 +109,20 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.auth.login(this.loginForm.value).subscribe({
-      next: () => {
+    const loginRequest: LoginRequest = this.loginForm.value;
+
+    this.auth.login(loginRequest).subscribe({
+      next: (response) => {
+        console.log('Login successful:', response);
         this.isLoading = false;
-        // Navigate to the return URL after successful login
         this.router.navigate([this.returnUrl]);
       },
       error: (err) => {
+        console.error('Login error:', err);
         this.isLoading = false;
         // Clear password field on error for security
         this.loginForm.patchValue({ password: '' });
-
-        // Handle different error scenarios
-        if (err.status === 401) {
-          this.errorMessage = 'Invalid email or password. Please try again.';
-        } else if (err.status === 400) {
-          this.errorMessage = err.error?.message || 'Invalid request. Please check your credentials.';
-        } else if (err.status === 0) {
-          this.errorMessage = 'Unable to connect to server. Please check your internet connection.';
-        } else {
-          this.errorMessage = err.error?.message || err.error || 'Invalid email or password.';
-        }
+        this.errorMessage = err.message || 'Invalid email or password. Please try again.';
       }
     });
   }
