@@ -11,7 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <div class="login-container">
       <div class="glass-panel login-card slide-up">
-        <h2>Welcome to Henri Trips</h2>
+        <h2>Welcome to Henri Trips 1</h2>
         <p>Log in to plan your next adventure.</p>
         
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="margin-top: 2rem;">

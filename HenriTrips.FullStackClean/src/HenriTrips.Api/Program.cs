@@ -22,6 +22,23 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Missing DefaultConnection string");
 #endregion
 
+#region CORS (ANGULAR SUPPORT)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:4200",
+                "https://localhost:4200"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+#endregion
+
 #region DB CONTEXT
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -81,8 +98,7 @@ builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
 
 var app = builder.Build();
 
-#region AUTO MIGRATION + SEED (SAFE FOR EXISTING DB + DOCKER)
-
+#region AUTO MIGRATION + SEED (SAFE FOR DEV / DOCKER / PROD)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -94,31 +110,16 @@ using (var scope = app.Services.CreateScope())
 
         if (!isTesting)
         {
-            // ✅ 1. Ensure DB exists (safe, does nothing if already exists)
-            await db.Database.EnsureCreatedAsync();
+            // Apply migrations safely (DO NOT use EnsureCreated with Migrations)
+            var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
 
-            // ✅ 2. Try migrations safely (skip if schema already exists without history)
-            try
+            if (pendingMigrations.Any())
             {
-                var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
-
-                if (pendingMigrations.Any())
-                {
-                    await db.Database.MigrateAsync();
-                    logger.LogInformation("Database migrations applied.");
-                }
-                else
-                {
-                    logger.LogInformation("No pending migrations.");
-                }
-            }
-            catch (Exception ex)
-            {
-                // 🔐 Critical: prevents crash when tables exist but no migration history
-                logger.LogWarning("Migration skipped: {Message}", ex.Message);
+                await db.Database.MigrateAsync();
+                logger.LogInformation("Database migrations applied.");
             }
 
-            // ✅ 3. Safe seeding (should internally check if data already exists)
+            // Seed safely (idempotent inside Seeder)
             await DbSeeder.SeedAdminAsync(services);
         }
     }
@@ -131,12 +132,19 @@ using (var scope = app.Services.CreateScope())
 #endregion
 
 #region MIDDLEWARE PIPELINE
+
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// HTTPS only outside Docker (prevents redirect issues)
+if (!app.Environment.IsEnvironment("Docker"))
+{
+    app.UseHttpsRedirection();
+}
+
+app.UseCors("AllowAngular");
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -145,6 +153,7 @@ app.MapControllers();
 
 // Health check
 app.MapGet("/health", () => Results.Ok("Healthy"));
+
 #endregion
 
 app.Run();
