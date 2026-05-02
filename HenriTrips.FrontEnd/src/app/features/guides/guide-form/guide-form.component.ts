@@ -308,6 +308,7 @@ export class GuideFormComponent implements OnInit {
 
   isEditMode = false;
   guideId: string | null = null;
+  isSubmitting = false;
 
   guideForm: FormGroup = this.fb.group({
     title: ['', Validators.required],
@@ -343,16 +344,17 @@ export class GuideFormComponent implements OnInit {
   }
 
   // Checkbox helpers
-  isMobilitySelected(opt: string) { return this.guideForm.value.mobility.includes(opt); }
-  isSeasonSelected(opt: string) { return this.guideForm.value.seasons.includes(opt); }
-  isAudienceSelected(opt: string) { return this.guideForm.value.targetAudience.includes(opt); }
+  isMobilitySelected(opt: string) { return this.guideForm.value.mobility?.includes(opt) || false; }
+  isSeasonSelected(opt: string) { return this.guideForm.value.seasons?.includes(opt) || false; }
+  isAudienceSelected(opt: string) { return this.guideForm.value.targetAudience?.includes(opt) || false; }
 
   toggleMobility(opt: string, event: any) { this.toggleArrayItem('mobility', opt, event.target.checked); }
   toggleSeason(opt: string, event: any) { this.toggleArrayItem('seasons', opt, event.target.checked); }
   toggleAudience(opt: string, event: any) { this.toggleArrayItem('targetAudience', opt, event.target.checked); }
 
   private toggleArrayItem(controlName: string, item: string, isChecked: boolean) {
-    const list = [...this.guideForm.get(controlName)?.value];
+    const currentValue = this.guideForm.get(controlName)?.value || [];
+    const list = [...currentValue];
     if (isChecked) {
       if (!list.includes(item)) {
         list.push(item);
@@ -373,24 +375,60 @@ export class GuideFormComponent implements OnInit {
       return;
     }
 
+    this.isSubmitting = true;
+
+    // Prepare form data with empty arrays instead of undefined
+    const formValue = this.guideForm.value;
+    const submitData = {
+      title: formValue.title,
+      description: formValue.description,
+      days: formValue.days,
+      imageUrl: formValue.imageUrl || '',
+      mobility: formValue.mobility || [],
+      seasons: formValue.seasons || [],
+      targetAudience: formValue.targetAudience || []
+    };
+
     if (this.isEditMode && this.guideId) {
-      this.guideService.updateGuide(this.guideId, this.guideForm.value).subscribe({
+      this.guideService.updateGuide(this.guideId, submitData).subscribe({
         next: () => {
+          this.isSubmitting = false;
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
+          this.isSubmitting = false;
           console.error('Error updating guide:', error);
-          alert('Failed to update guide. Please try again.');
+          
+          // Display validation errors from backend
+          if (error.error?.errors) {
+            const errorMessages = Object.values(error.error.errors).flat();
+            alert(`Validation failed:\n${errorMessages.join('\n')}`);
+          } else if (error.error?.title) {
+            alert(`Failed to update guide: ${error.error.title}`);
+          } else {
+            alert('Failed to update guide. Please try again.');
+          }
         }
       });
     } else {
-      this.guideService.addGuide(this.guideForm.value).subscribe({
+      this.guideService.addGuide(submitData).subscribe({
         next: () => {
+          this.isSubmitting = false;
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
+          this.isSubmitting = false;
           console.error('Error creating guide:', error);
-          alert('Failed to create guide. Please try again.');
+          
+          // Display validation errors from backend
+          if (error.error?.errors) {
+            const errorMessages = Object.values(error.error.errors).flat();
+            alert(`Validation failed:\n${errorMessages.join('\n')}`);
+          } else if (error.error?.title) {
+            alert(`Failed to create guide: ${error.error.title}`);
+          } else {
+            alert('Failed to create guide. Please try again.');
+          }
         }
       });
     }

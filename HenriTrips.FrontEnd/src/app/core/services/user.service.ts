@@ -32,7 +32,7 @@ export interface UpdateUserRequest {
 })
 export class UserService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/auth`;
+  private apiUrl = `${environment.apiUrl}/Auth`;
   private guidesApiUrl = `${environment.apiUrl}/guides`;
 
   users = signal<User[]>([]);

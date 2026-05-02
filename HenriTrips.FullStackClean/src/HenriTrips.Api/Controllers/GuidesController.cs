@@ -46,6 +46,9 @@ public class GuidesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] GuideCreateDto dto)
     {
+         if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+    
         var id = await _createGuide.ExecuteAsync(dto);
         return Ok(id);
     }

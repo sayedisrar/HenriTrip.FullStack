@@ -11,9 +11,13 @@ using HenriTrips.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
-#region ENVIRONMENT FLAG (TEST SAFETY)
+#region ENVIRONMENT FLAG
 var isTesting = builder.Environment.IsEnvironment("Testing");
 #endregion
 
@@ -22,16 +26,13 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Missing DefaultConnection string");
 #endregion
 
-#region CORS (ANGULAR SUPPORT)
+#region CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
         policy
-            .WithOrigins(
-                "http://localhost:4200",
-                "https://localhost:4200"
-            )
+            .WithOrigins("http://localhost:4200", "https://localhost:4200")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -52,26 +53,74 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddDefaultTokenProviders();
 #endregion
 
-#region AUTH SERVICE
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<TokenService>();
+#region JWT AUTHENTICATION (🔥 FIX)
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var secretKey = jwtSettings["SecretKey"];
+
+if (string.IsNullOrEmpty(secretKey))
+    throw new Exception("JWT SecretKey is missing!");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(secretKey)
+        )
+    };
+});
 #endregion
 
-#region REPOSITORIES
+#region DISABLE COOKIE REDIRECT (🔥 VERY IMPORTANT)
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = 401;
+        return Task.CompletedTask;
+    };
+
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = 403;
+        return Task.CompletedTask;
+    };
+});
+#endregion
+
+#region SERVICES
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<TokenService>();
+
 builder.Services.AddScoped<IGuideRepository, GuideRepository>();
 builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
 #endregion
 
-#region USE CASES - GUIDES
+#region USE CASES
+// Guides
 builder.Services.AddScoped<GetGuides>();
 builder.Services.AddScoped<GetGuideById>();
 builder.Services.AddScoped<CreateGuide>();
 builder.Services.AddScoped<UpdateGuide>();
 builder.Services.AddScoped<DeleteGuide>();
 builder.Services.AddScoped<InviteUser>();
-#endregion
 
-#region USE CASES - ACTIVITIES
+// Activities
 builder.Services.AddScoped<CreateActivity>();
 builder.Services.AddScoped<UpdateActivity>();
 builder.Services.AddScoped<DeleteActivity>();
@@ -98,7 +147,7 @@ builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
 
 var app = builder.Build();
 
-#region AUTO MIGRATION + SEED (SAFE FOR DEV / DOCKER / PROD)
+#region MIGRATION + SEED
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -110,7 +159,6 @@ using (var scope = app.Services.CreateScope())
 
         if (!isTesting)
         {
-            // Apply migrations safely (DO NOT use EnsureCreated with Migrations)
             var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
 
             if (pendingMigrations.Any())
@@ -119,7 +167,6 @@ using (var scope = app.Services.CreateScope())
                 logger.LogInformation("Database migrations applied.");
             }
 
-            // Seed safely (idempotent inside Seeder)
             await DbSeeder.SeedAdminAsync(services);
         }
     }
@@ -128,17 +175,15 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Migration or seeding failed");
     }
 }
-
 #endregion
 
-#region MIDDLEWARE PIPELINE
+#region MIDDLEWARE
 
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// HTTPS only outside Docker (prevents redirect issues)
 if (!app.Environment.IsEnvironment("Docker"))
 {
     app.UseHttpsRedirection();
@@ -146,17 +191,17 @@ if (!app.Environment.IsEnvironment("Docker"))
 
 app.UseCors("AllowAngular");
 
+// 🔥 ORDER MATTERS
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Health check
 app.MapGet("/health", () => Results.Ok("Healthy"));
 
 #endregion
 
 app.Run();
 
-// REQUIRED for WebApplicationFactory testing
+// Required for testing
 public partial class Program { }

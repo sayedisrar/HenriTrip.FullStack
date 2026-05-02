@@ -1,3 +1,4 @@
+// src/app/core/services/activity.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
@@ -61,7 +62,7 @@ interface BackendActivity {
 })
 export class ActivityService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/guides`;
+  private apiUrl = `${environment.apiUrl}`;
 
   // Map category string to number for backend
   private categoryToNumber(category: string): number {
@@ -75,7 +76,7 @@ export class ActivityService {
     return map[category] ?? 2;
   }
 
-  // Map category number to string for frontend - FIXED
+  // Map category number to string for frontend
   private numberToCategory(num: number): 'museum' | 'park' | 'restaurant' | 'beach' | 'other' {
     const map: Record<number, any> = {
       0: 'museum',
@@ -87,9 +88,10 @@ export class ActivityService {
     return map[num] || 'restaurant';
   }
 
+  // FIXED: Use correct endpoint /api/activities/guide/{guideId}
   getActivitiesForGuide(guideId: string): Observable<Activity[]> {
     const numericGuideId = parseInt(guideId, 10);
-    return this.http.get<BackendActivity[]>(`${this.apiUrl}/${numericGuideId}/activities`).pipe(
+    return this.http.get<BackendActivity[]>(`${this.apiUrl}/activities/guide/${numericGuideId}`).pipe(
       map(activities => activities.map(a => ({
         id: a.id,
         guideId: a.guideId,
@@ -106,6 +108,7 @@ export class ActivityService {
     );
   }
 
+  // FIXED: Use correct endpoint /api/activities (POST)
   addActivity(activityData: ActivityCreateRequest): Observable<Activity> {
     const payload = {
       title: activityData.title,
@@ -119,8 +122,8 @@ export class ActivityService {
       day: activityData.day,
       guideId: activityData.guideId
     };
-    console.log('Sending to backend:', payload);
-    return this.http.post<BackendActivity>(`${this.apiUrl}/activity`, payload).pipe(
+    console.log('Sending to backend (POST /api/activities):', payload);
+    return this.http.post<BackendActivity>(`${this.apiUrl}/activities`, payload).pipe(
       map(a => ({
         id: a.id,
         guideId: a.guideId,
@@ -137,6 +140,7 @@ export class ActivityService {
     );
   }
 
+  // FIXED: Use correct endpoint /api/activities/{id} (PUT)
   updateActivity(activityId: number, activityData: ActivityUpdateRequest): Observable<Activity> {
     const payload: any = {};
     if (activityData.title !== undefined) payload.title = activityData.title;
@@ -149,8 +153,8 @@ export class ActivityService {
     if (activityData.order !== undefined) payload.order = activityData.order;
     if (activityData.day !== undefined) payload.day = activityData.day;
 
-    console.log('Updating backend with:', payload);
-    return this.http.put<BackendActivity>(`${this.apiUrl}/activity/${activityId}`, payload).pipe(
+    console.log('Updating backend (PUT /api/activities/' + activityId + '):', payload);
+    return this.http.put<BackendActivity>(`${this.apiUrl}/activities/${activityId}`, payload).pipe(
       map(a => ({
         id: a.id,
         guideId: a.guideId,
@@ -167,7 +171,8 @@ export class ActivityService {
     );
   }
 
+  // FIXED: Use correct endpoint /api/activities/{id} (DELETE)
   deleteActivity(activityId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/activity/${activityId}`);
+    return this.http.delete<void>(`${this.apiUrl}/activities/${activityId}`);
   }
 }
