@@ -82,20 +82,31 @@ export class UserService {
   }
 
   // Get all users from API (basic info only)
-  getAllUsers(): Observable<User[]> {
-    return this.http.get<BackendUser[]>(`${this.apiUrl}/users`).pipe(
-      map(backendUsers => backendUsers.map(backendUser => this.transformToUser(backendUser))),
-      catchError(this.handleError<User[]>('getAllUsers', []))
-    );
-  }
+getAllUsers(): Observable<User[]> {
+  console.log('Calling API: GET', `${this.apiUrl}/users`);
+  
+  return this.http.get<{ success: boolean; data: BackendUser[] }>(`${this.apiUrl}/users`).pipe(
+    tap(response => console.log('Raw API response:', response)),
+    map(response => {
+      // Extract the data array from the wrapped response
+      const backendUsers = response.data || [];
+      return backendUsers.map(backendUser => this.transformToUser(backendUser));
+    }),
+    tap(users => console.log('Transformed users:', users)),
+    catchError((error) => {
+      console.error('API Error:', error);
+      return of([]);
+    })
+  );
+}
 
   // Get single user by ID from API
-  getUserByIdFromApi(id: string): Observable<User> {
-    return this.http.get<BackendUser>(`${this.apiUrl}/users/${id}`).pipe(
-      map(backendUser => this.transformToUser(backendUser)),
-      catchError(this.handleError<User>('getUserByIdFromApi'))
-    );
-  }
+ getUserByIdFromApi(id: string): Observable<User> {
+  return this.http.get<{ success: boolean; data: BackendUser }>(`${this.apiUrl}/users/${id}`).pipe(
+    map(response => this.transformToUser(response.data)),
+    catchError(this.handleError<User>('getUserByIdFromApi'))
+  );
+}
 
   // Get user by ID from signal (sync)
   getUserById(id: string): User | undefined {
@@ -124,66 +135,85 @@ export class UserService {
   }
 
   // Update all guide invitations for a user (replace all)
-  updateUserGuideInvitations(userId: string, guideIds: string[]): Observable<any> {
-    return this.getUserInvitedGuides(userId).pipe(
-      switchMap(currentInvites => {
-        const currentSet = new Set(currentInvites);
-        const newSet = new Set(guideIds);
+updateUserGuideInvitations(userId: string, guideIds: string[]): Observable<any> {
+  console.log('=== UPDATE GUIDE INVITATIONS ===');
+  console.log('User ID:', userId);
+  console.log('New guide IDs to save:', guideIds);
+  
+  return this.getUserInvitedGuides(userId).pipe(
+    switchMap(currentInvites => {
+      console.log('Current invites from database:', currentInvites);
+      
+      const currentSet = new Set(currentInvites);
+      const newSet = new Set(guideIds);
 
-        const toAdd = guideIds.filter(id => !currentSet.has(id));
-        const toRemove = currentInvites.filter(id => !newSet.has(id));
+      const toAdd = guideIds.filter(id => !currentSet.has(id));
+      const toRemove = currentInvites.filter(id => !newSet.has(id));
+      
+      console.log('Guides to ADD:', toAdd);
+      console.log('Guides to REMOVE:', toRemove);
+      console.log('Remove endpoint URL:', `${this.guidesApiUrl}/${toRemove[0]}/remove-user/${userId}`);
 
-        const addRequests = toAdd.map(guideId =>
-          this.inviteUserToGuide(userId, guideId)
-        );
-        const removeRequests = toRemove.map(guideId =>
-          this.removeUserFromGuide(userId, guideId)
-        );
+      const addRequests = toAdd.map(guideId =>
+        this.inviteUserToGuide(userId, guideId)
+      );
+      const removeRequests = toRemove.map(guideId =>
+        this.removeUserFromGuide(userId, guideId)
+      );
 
-        if (addRequests.length === 0 && removeRequests.length === 0) {
-          return of({ message: 'No changes to guide invitations' });
-        }
+      if (addRequests.length === 0 && removeRequests.length === 0) {
+        console.log('No changes needed');
+        return of({ message: 'No changes to guide invitations' });
+      }
 
-        return forkJoin([...addRequests, ...removeRequests]);
-      }),
-      catchError(this.handleError<any>('updateUserGuideInvitations'))
-    );
-  }
+      return forkJoin([...addRequests, ...removeRequests]);
+    }),
+    tap(() => console.log('Guide invitations update completed')),
+    catchError(this.handleError<any>('updateUserGuideInvitations'))
+  );
+}
 
   // Create new user (admin only)
   addUser(userData: { email: string; password: string; role: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/create-user`, userData).pipe(
-      tap(() => this.refreshUsers()),
-      catchError(this.handleError<any>('addUser'))
-    );
-  }
+  return this.http.post<{ success: boolean; data: { userId: string; message: string } }>(`${this.apiUrl}/create-user`, userData).pipe(
+    tap(() => this.refreshUsers()),
+    catchError(this.handleError<any>('addUser'))
+  );
+}
 
   // Update user (admin only) - accepts separate password field
-  updateUser(id: string, updates: Partial<User>, newPassword?: string): Observable<User> {
-    const updateData: UpdateUserRequest = {};
+updateUser(id: string, updates: Partial<User>, newPassword?: string): Observable<User> {
+  const updateData: UpdateUserRequest = {};
 
-    if (updates.email) {
-      updateData.email = updates.email;
-    }
-
-    if (updates.name) {
-      updateData.name = updates.name;
-    }
-
-    if (updates.role) {
-      updateData.role = updates.role === 'admin' ? 'Admin' : 'User';
-    }
-
-    if (newPassword) {
-      updateData.password = newPassword;
-    }
-
-    return this.http.put<BackendUser>(`${this.apiUrl}/users/${id}`, updateData).pipe(
-      map(backendUser => this.transformToUser(backendUser)),
-      tap(() => this.refreshUsers()),
-      catchError(this.handleError<User>('updateUser'))
-    );
+  if (updates.email) {
+    updateData.email = updates.email;
   }
+
+  if (updates.name) {
+    updateData.name = updates.name;
+  }
+
+  if (updates.role) {
+    updateData.role = updates.role === 'admin' ? 'Admin' : 'User';
+  }
+
+  if (newPassword) {
+    updateData.password = newPassword;
+  }
+
+  // The API returns: { success: true, data: BackendUser, message: null }
+  return this.http.put<{ success: boolean; data: BackendUser; message?: string }>(`${this.apiUrl}/users/${id}`, updateData).pipe(
+    map(response => {
+      console.log('Update user response:', response);
+      if (response.success && response.data) {
+        return this.transformToUser(response.data);
+      }
+      throw new Error(response.message || 'Update failed');
+    }),
+    tap(() => this.refreshUsers()),
+    catchError(this.handleError<User>('updateUser'))
+  );
+}
 
   // Update just the user's role
   updateUserRole(id: string, role: 'admin' | 'user'): Observable<User> {
@@ -209,20 +239,23 @@ export class UserService {
   }
 
   // Invite user to a single guide (admin only)
-  inviteUserToGuide(userId: string, guideId: string): Observable<any> {
-    const numericGuideId = parseInt(guideId, 10);
-    return this.http.post(`${this.guidesApiUrl}/${numericGuideId}/invite-user/${userId}`, {}).pipe(
-      catchError(this.handleError<any>('inviteUserToGuide'))
-    );
-  }
+inviteUserToGuide(userId: string, guideId: string): Observable<any> {
+  const numericGuideId = parseInt(guideId, 10);
+  // Fixed: removed '-user' from the endpoint
+  return this.http.post(`${this.guidesApiUrl}/${numericGuideId}/invite/${userId}`, {}).pipe(
+    catchError(this.handleError<any>('inviteUserToGuide'))
+  );
+}
 
   // Remove user from a single guide (admin only)
-  removeUserFromGuide(userId: string, guideId: string): Observable<any> {
-    const numericGuideId = parseInt(guideId, 10);
-    return this.http.delete(`${this.guidesApiUrl}/${numericGuideId}/remove-user/${userId}`).pipe(
-      catchError(this.handleError<any>('removeUserFromGuide'))
-    );
-  }
+removeUserFromGuide(userId: string, guideId: string): Observable<any> {
+  const numericGuideId = parseInt(guideId, 10);
+  console.log(`Calling DELETE: ${this.guidesApiUrl}/${numericGuideId}/remove-user/${userId}`);
+  return this.http.delete(`${this.guidesApiUrl}/${numericGuideId}/remove-user/${userId}`).pipe(
+    tap(() => console.log(`Successfully removed user ${userId} from guide ${guideId}`)),
+    catchError(this.handleError<any>('removeUserFromGuide'))
+  );
+}
 
   // Get users for a specific guide
   getUsersByGuideId(guideId: string): Observable<User[]> {
@@ -238,15 +271,19 @@ export class UserService {
   }
 
   // Helper: Transform backend user to frontend user
-  private transformToUser(backendUser: BackendUser, invitedGuideIds: string[] = []): User {
-    return {
-      id: backendUser.id,
-      name: backendUser.userName || backendUser.email.split('@')[0],
-      email: backendUser.email,
-      role: backendUser.roles?.includes('Admin') ? 'admin' : 'user',
-      invitedGuideIds: invitedGuideIds
-    };
-  }
+private transformToUser(backendUser: BackendUser, invitedGuideIds: string[] = []): User {
+  // Add null checks to prevent undefined errors
+  const email = backendUser?.email || '';
+  const userName = backendUser?.userName || email.split('@')[0] || 'User';
+  
+  return {
+    id: backendUser?.id || '',
+    name: userName,
+    email: email,
+    role: backendUser?.roles?.includes('Admin') ? 'admin' : 'user',
+    invitedGuideIds: invitedGuideIds || []
+  };
+}
  
   // Error handler
   private handleError<T>(operation = 'operation', result?: T) {
@@ -270,3 +307,4 @@ export class UserService {
     };
   }
 }
+//perfect...

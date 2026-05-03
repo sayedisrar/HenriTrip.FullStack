@@ -453,6 +453,11 @@ export class UserFormComponent implements OnInit {
 
       console.log('Step 1: Updating user basic info...', updateData);
 
+      console.log('=== PASSWORD CHECK ===');
+console.log('formValue.password:', formValue.password);
+console.log('newPassword:', newPassword ? 'Has password (not empty)' : 'No password or empty');
+
+
       // Update user basic info (name, email, role, password)
       this.userService.updateUser(this.userId, updateData, newPassword).subscribe({
         next: (updatedUser) => {
@@ -511,44 +516,39 @@ export class UserFormComponent implements OnInit {
 
       console.log('Creating new user:', userData);
 
-      this.userService.addUser(userData).subscribe({
-        next: (response: any) => {
-          console.log('User created successfully:', response);
-          const newUserId = response.userId || response.id;
 
-          // If user is not admin and has guide invitations, save them
-          if (formValue.role !== 'admin' && formValue.invitedGuideIds?.length > 0 && newUserId) {
-            console.log('Saving guide invitations for new user:', formValue.invitedGuideIds);
 
-            this.userService.updateUserGuideInvitations(newUserId, formValue.invitedGuideIds).subscribe({
-              next: () => {
-                console.log('Guide invitations saved successfully');
-                this.userService.refreshUsers();
-                this.router.navigate(['/dashboard/users']);
-              },
-              error: (error) => {
-                console.error('Failed to save guide invitations:', error);
-                alert('User created but failed to save guide invitations.');
-                this.userService.refreshUsers();
-                this.router.navigate(['/dashboard/users']);
-              }
-            });
-          } else {
-            this.userService.refreshUsers();
-            this.router.navigate(['/dashboard/users']);
-          }
+this.userService.addUser(userData).subscribe({
+  next: (response: any) => {
+    console.log('User created successfully:', response);
+    const newUserId = response.data?.userId || response.userId;
+    
+    // Save guide invitations AFTER user exists
+    if (formValue.role !== 'admin' && formValue.invitedGuideIds?.length > 0 && newUserId) {
+      console.log('Saving guide invitations for new user:', formValue.invitedGuideIds);
+      this.userService.updateUserGuideInvitations(newUserId, formValue.invitedGuideIds).subscribe({
+        next: () => {
+          console.log('Guide invitations saved successfully');
+          this.userService.refreshUsers();
+          this.router.navigate(['/dashboard/users']);
         },
         error: (error) => {
-          console.error('Failed to create user:', error);
-          let errorMessage = 'Failed to create user. ';
-          if (error.error?.message) errorMessage += error.error.message;
-          else if (error.error?.errors) {
-            const errors = Object.values(error.error.errors).flat();
-            errorMessage += errors.join(', ');
-          }
-          alert(errorMessage);
+          console.error('Failed to save guide invitations:', error);
+          alert('User created but failed to save guide invitations.');
+          this.userService.refreshUsers();
+          this.router.navigate(['/dashboard/users']);
         }
       });
+    } else {
+      this.userService.refreshUsers();
+      this.router.navigate(['/dashboard/users']);
+    }
+  },
+  error: (error) => {
+    console.error('Failed to create user:', error);
+    alert('Failed to create user. ' + (error.error?.message || error.message));
+  }
+});
     }
   }
  }

@@ -4,14 +4,14 @@ using HenriTrips.Api.Middleware;
 using HenriTrips.Application.Interfaces;
 using HenriTrips.Application.UseCases.Activities;
 using HenriTrips.Application.UseCases.Guides;
+using HenriTrips.Application.UseCases.Users;
 using HenriTrips.Application.Validators.Guide;
 using HenriTrips.Infrastructure.Data;
 using HenriTrips.Infrastructure.Identity;
 using HenriTrips.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -138,12 +138,27 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining(typeof(GuideCreateDtoValidator));
 #endregion
 
+#region User Management Use Cases
+builder.Services.AddScoped<GetAllUsers>();
+builder.Services.AddScoped<GetUserById>();
+builder.Services.AddScoped<CreateUser>();
+builder.Services.AddScoped<UpdateUser>();
+builder.Services.AddScoped<DeleteUser>();
+#endregion
+
+#region Guide Permission Use Cases
+builder.Services.AddScoped<GetUserInvitedGuides>();
+builder.Services.AddScoped<RemoveUserFromGuide>();
+#endregion
+
 #region LOGGING
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
 #endregion
+
+
 
 var app = builder.Build();
 

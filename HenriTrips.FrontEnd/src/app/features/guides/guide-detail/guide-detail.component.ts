@@ -909,27 +909,27 @@ export class GuideDetailComponent implements OnInit {
   }
 
   // Get category display name (capitalized)
-  getCategoryName(category: string): string {
-    const names: Record<string, string> = {
-      museum: 'Museum',
-      park: 'Park',
-      restaurant: 'Restaurant',
-      beach: 'Beach',
-      other: 'Other'
-    };
-    return names[category] || category;
-  }
+getCategoryName(category: number): string {
+  const names: Record<number, string> = {
+    0: 'Museum',
+    1: 'Park',
+    2: 'Restaurant',
+    3: 'Beach',
+    4: 'Other'
+  };
+  return names[category] || 'Other';
+}
 
-  getCategoryIcon(category: string): string {
-    const icons: Record<string, string> = {
-      museum: '🏛️',
-      park: '🌳',
-      restaurant: '🍽️',
-      beach: '🏖️',
-      other: '📌'
-    };
-    return icons[category] || '📍';
-  }
+getCategoryIcon(category: number): string {
+  const icons: Record<number, string> = {
+    0: '🏛️',
+    1: '🌳',
+    2: '🍽️',
+    3: '🏖️',
+    4: '📌'
+  };
+  return icons[category] || '📌';
+}
 
   editActivity(activity: Activity) {
     console.log('📝 EDIT ACTIVITY CALLED:', activity);

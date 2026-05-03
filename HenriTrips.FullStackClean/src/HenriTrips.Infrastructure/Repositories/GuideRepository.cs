@@ -45,10 +45,11 @@ public class GuideRepository : IGuideRepository
         var guide = await _context.Guides.FindAsync(id);
         if (guide != null)
         {
-            _context.Guides.Remove(guide);
+           _context.Guides.Remove(guide);
             await _context.SaveChangesAsync();
         }
     }
+
     public async Task AddUserToGuide(string userId, int guideId)
     {
         _context.GuideUsers.Add(new GuideUser
@@ -56,7 +57,50 @@ public class GuideRepository : IGuideRepository
             UserId = userId,
             GuideId = guideId
         });
-
         await _context.SaveChangesAsync();
     }
+
+    // NEW METHODS
+    public async Task
+
+
+
+
+<List<string>> GetUserInvitedGuideIdsAsync(string userId)
+    {
+        return await _context.GuideUsers
+            .Where(gu => gu.UserId == userId)
+            .Select(gu => gu.GuideId.ToString())
+            .ToListAsync();
+   }
+
+    public async Task<bool> RemoveUserFromGuideAsync(string userId, int guideId)
+    {
+        var guideUser = await _context.GuideUsers
+ 
+
+
+
+
+           .FirstOrDefaultAsync(gu => gu.UserId == userId && gu.GuideId == guideId);
+        
+        if (guideUser == null) return false;
+        
+        _context.GuideUsers.Remove(guideUser);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+
+
+
+
+    public async Task<List<Guide>> GetGuidesByUserIdAsync(string userId)
+    {
+        return await _context.Guides
+            .Where(g => g.GuideUsers.Any(gu => gu.UserId == userId))
+            .Include(g => g.Activities)
+            .ToListAsync();
+    }
+    
 }

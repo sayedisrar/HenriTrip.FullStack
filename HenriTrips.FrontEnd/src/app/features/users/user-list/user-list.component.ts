@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UserService, User } from '../../../core/services/user.service';
@@ -7,101 +7,119 @@ import { UserService, User } from '../../../core/services/user.service';
   selector: 'app-user-list',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  template: `
-    <div class="user-list-header slide-up">
-      <div>
-        <h1 style="margin-bottom: 0.5rem;">User Management</h1>
-        <p>Manage application access, user roles, and guide invitations.</p>
-      </div>
-      
-      <a routerLink="/dashboard/users/new" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <line x1="19" y1="8" x2="19" y2="14"/>
-          <line x1="22" y1="11" x2="16" y2="11"/>
-        </svg>
-        Add New User
-      </a>
+ template: `
+  <!-- Header -->
+  <div class="user-list-header slide-up">
+    <div>
+      <h1 style="margin-bottom: 0.5rem;">User Management</h1>
+      <p>Manage application access, user roles, and guide invitations.</p>
     </div>
 
-    <div class="glass-panel slide-up" style="animation-delay: 0.1s; overflow: hidden;">
-      <div class="table-responsive">
-        <table class="user-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>System Role</th>
-              <th>Accessible Guides</th>
-              <th class="text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let user of userService.getUsers()">
-              <td>
-                <div class="user-info">
-                  <div class="avatar" [style.background]="getAvatarColor(user.name)">
-                    {{ user.name.charAt(0).toUpperCase() }}
-                  </div>
-                  <div>
-                    <div class="user-name">{{ user.name }}</div>
-                    
-                  </div>
+    <a routerLink="/dashboard/users/new" class="btn btn-primary">
+      Add New User
+    </a>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="glass-panel loading-state">
+    <div class="spinner"></div>
+    <p>Loading users...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading" class="glass-panel slide-up" style="animation-delay: 0.1s; overflow: hidden;">
+    <div class="table-responsive">
+
+      <table class="user-table">
+
+        <!-- Header -->
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>System Role</th>
+            <th>Accessible Guides</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+
+        <!-- Body -->
+        <tbody>
+
+          <!-- User Row -->
+          <tr *ngFor="let user of users">
+
+            <!-- Name -->
+            <td>
+              <div class="user-info">
+                <div class="avatar" [style.background]="getAvatarColor(user.name)">
+                  {{ user.name.charAt(0).toUpperCase() }}
                 </div>
-              </td>
-              <td>
-                <span class="badge" [ngClass]="user.role === 'admin' ? 'badge-primary' : 'badge-success'">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                  </svg>
-                  {{ user.role | titlecase }}
-                </span>
-              </td>
-              <td>
-                <span class="badge badge-warning" *ngIf="user.role === 'admin'">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                  All Guides
-                </span>
-                <span *ngIf="user.role === 'user'" class="guide-count">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                  </svg>
-                  {{ user.invitedGuideIds.length || 0 }} Guide{{ (user.invitedGuideIds.length !== 1) ? 's' : '' }}
-                </span>
-              </td>
-              <td class="text-right">
-                <div class="action-buttons">
-                  <a [routerLink]="['/dashboard/users', user.id, 'edit']" class="btn-icon btn-edit" title="Edit User">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M17 3l4 4-7 7H10v-4l7-7z"/>
-                      <path d="M4 20h16"/>
-                    </svg>
-                  </a>
-                  <button class="btn-icon btn-delete" 
-                          (click)="deleteUser(user)" 
-                          [disabled]="isDeleting === user.id || user.role === 'admin'"
-                          title="Delete User">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" *ngIf="isDeleting !== user.id">
-                      <path d="M4 7h16"/>
-                      <path d="M10 11v6"/>
-                      <path d="M14 11v6"/>
-                      <path d="M5 7l1 13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-13"/>
-                      <path d="M9 3h6"/>
-                    </svg>
-                    <div class="spinner" *ngIf="isDeleting === user.id"></div>
-                  </button>
+                <div>
+                  <div class="user-name">{{ user.name }}</div>
+                  <div class="user-email">{{ user.email }}</div>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </td>
+
+            <!-- Role -->
+            <td>
+              <span class="badge"
+                    [ngClass]="user.role === 'admin' ? 'badge-primary' : 'badge-success'">
+                {{ user.role | titlecase }}
+              </span>
+            </td>
+
+            <!-- Guides -->
+            <td>
+              <span *ngIf="user.role === 'admin'" class="badge badge-warning">
+                All Guides
+              </span>
+
+              <span *ngIf="user.role === 'user'" class="guide-count">
+                {{ user.invitedGuideIds.length }}
+                Guide{{ user.invitedGuideIds.length !== 1 ? 's' : '' }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="text-right">
+              <div class="action-buttons">
+
+                <a [routerLink]="['/dashboard/users', user.id, 'edit']"
+                   class="btn-icon btn-edit"
+                   title="Edit User">
+                  ✏️
+                </a>
+
+                <button class="btn-icon btn-delete"
+                        (click)="deleteUser(user)"
+                        [disabled]="isDeleting === user.id || user.role === 'admin'"
+                        title="Delete User">
+
+                  <span *ngIf="isDeleting !== user.id">🗑️</span>
+                  <span *ngIf="isDeleting === user.id" class="spinner"></span>
+
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="users.length === 0">
+            <td colspan="4" class="text-center" style="padding: 3rem;">
+              No users found.
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
     </div>
-  `,
+  </div>
+`,
   styles: [`
     .user-list-header {
       display: flex;
@@ -122,11 +140,30 @@ import { UserService, User } from '../../../core/services/user.service';
       border-radius: var(--radius-md);
       font-weight: 500;
       transition: all 0.2s;
+      text-decoration: none;
     }
     
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 20px -10px var(--primary);
+    }
+
+    .loading-state {
+      padding: 4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
     
     .table-responsive {
@@ -184,15 +221,18 @@ import { UserService, User } from '../../../core/services/user.service';
       color: var(--text-main);
       margin-bottom: 0.25rem;
     }
-    
-    .user-id {
+
+    .user-email {
       font-size: 0.7rem;
       color: var(--text-muted);
-      font-family: monospace;
     }
     
     .text-right {
       text-align: right;
+    }
+    
+    .text-center {
+      text-align: center;
     }
     
     .badge {
@@ -288,9 +328,53 @@ import { UserService, User } from '../../../core/services/user.service';
     }
   `]
 })
-export class UserListComponent {
+export class UserListComponent implements OnInit {
   userService = inject(UserService);
+  users: User[] = [];
+  isLoading = true;
   isDeleting: string | null = null;
+
+  ngOnInit() {
+    // Get initial users
+    this.users = this.userService.getUsers();
+    
+    // If users are already loaded in the service, use them
+    if (this.users.length > 0) {
+      this.isLoading = false;
+    }
+    
+    // Load users from API (the service will update the signal)
+    this.userService.getAllUsers().subscribe({
+      next: (users) => {
+        console.log('Users loaded from API:', users);
+        // The service already has these users, but we need to fetch guide counts
+        // The service's loadUsers() method handles guide counts automatically
+        this.userService.loadUsers();
+      },
+      error: (error) => {
+        console.error('Failed to load users:', error);
+        this.isLoading = false;
+      }
+    });
+    
+    // Poll for user updates (guide counts are loaded asynchronously)
+    const checkUsers = setInterval(() => {
+      const updatedUsers = this.userService.getUsers();
+      if (updatedUsers.length > 0 && updatedUsers[0].invitedGuideIds !== undefined) {
+        this.users = updatedUsers;
+        this.isLoading = false;
+        clearInterval(checkUsers);
+      } else if (updatedUsers.length > 0 && this.users.length === 0) {
+        this.users = updatedUsers;
+      }
+    }, 500);
+    
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      clearInterval(checkUsers);
+      this.isLoading = false;
+    }, 5000);
+  }
 
   getAvatarColor(name: string): string {
     const colors = [
@@ -318,7 +402,15 @@ export class UserListComponent {
         next: (response) => {
           console.log('User deleted successfully:', response);
           this.isDeleting = null;
-          this.userService.refreshUsers();
+          // Reload users after delete
+          this.userService.getAllUsers().subscribe({
+            next: (users) => {
+              this.userService.loadUsers();
+              setTimeout(() => {
+                this.users = this.userService.getUsers();
+              }, 1000);
+            }
+          });
         },
         error: (error) => {
           console.error('Failed to delete user:', error);

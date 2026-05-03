@@ -10,33 +10,53 @@ public static class DbSeeder
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-        const string role = "Admin";
-        const string email = "admin@henritrips.com";
-        const string password = "Admin@12345!";
+        // Create BOTH roles if they don't exist
+        string[] roles = { "Admin", "User" };
 
-        // Create role if not exists
-        if (!await roleManager.RoleExistsAsync(role))
+        foreach (var roleName in roles)
         {
-            await roleManager.CreateAsync(new IdentityRole(role));
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                await roleManager.CreateAsync(new IdentityRole(roleName));
+                Console.WriteLine($"Created role: {roleName}");
+            }
         }
 
-        // Create user if not exists
-        var user = await userManager.FindByEmailAsync(email);
+        const string adminEmail = "admin@henritrips.com";
+        const string adminPassword = "Admin@12345!";
 
-        if (user == null)
+        // Create admin user if not exists
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+        if (adminUser == null)
         {
-            user = new IdentityUser
+            adminUser = new IdentityUser
             {
-                UserName = email,
-                Email = email,
+                UserName = adminEmail,
+                Email = adminEmail,
                 EmailConfirmed = true
             };
 
-            var result = await userManager.CreateAsync(user, password);
+            var result = await userManager.CreateAsync(adminUser, adminPassword);
 
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(user, role);
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+                Console.WriteLine("Created admin user");
+            }
+            else
+            {
+                Console.WriteLine("Failed to create admin user: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
+        }
+        else
+        {
+            // Ensure existing admin user has Admin role
+            var isAdmin = await userManager.IsInRoleAsync(adminUser, "Admin");
+            if (!isAdmin)
+            {
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+                Console.WriteLine("Added Admin role to existing admin user");
             }
         }
     }

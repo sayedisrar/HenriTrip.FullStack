@@ -1,4 +1,5 @@
 ﻿using HenriTrips.Application.DTOs.Guide;
+using HenriTrips.Application.UseCases.Activities;
 using HenriTrips.Application.UseCases.Guides;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -79,4 +80,32 @@ public class GuidesController : ControllerBase
         return Ok();
     }
 
+    // ========== NEW PERMISSION ENDPOINTS ==========
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("user/{userId}/invited-guides")]
+    public async Task<IActionResult> GetUserInvitedGuides(string userId, [FromServices] GetUserInvitedGuides getUserInvitedGuides)
+    {
+        var guideIds = await getUserInvitedGuides.ExecuteAsync(userId);
+        return Ok(guideIds);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{guideId}/remove-user/{userId}")]
+    public async Task<IActionResult> RemoveUserFromGuide(int guideId, string userId, [FromServices] RemoveUserFromGuide removeUserFromGuide)
+    {
+        var result = await removeUserFromGuide.ExecuteAsync(guideId, userId);
+        if (!result)
+            return NotFound(new { Message = "User not found in this guide" });
+
+        return Ok(new { Message = "User removed from guide successfully" });
+    }
+
+    // Compatibility endpoint for frontend
+    [HttpGet("{guideId}/activities")]
+    public async Task<IActionResult> GetActivitiesByGuideIdCompatibility(int guideId, [FromServices] GetActivitiesByGuideId getActivitiesByGuideId)
+    {
+        var result = await getActivitiesByGuideId.ExecuteAsync(guideId);
+        return Ok(result);
+    }
 }

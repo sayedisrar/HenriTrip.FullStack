@@ -1,7 +1,6 @@
-// src/app/core/services/activity.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, catchError, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Activity {
@@ -9,7 +8,7 @@ export interface Activity {
   guideId: number;
   title: string;
   description: string;
-  category: 'museum' | 'park' | 'restaurant' | 'beach' | 'other';
+  category: number;
   address: string;
   phone: string;
   openingHours: string;
@@ -21,7 +20,7 @@ export interface Activity {
 export interface ActivityCreateRequest {
   title: string;
   description: string;
-  category: string;
+  category: number;
   address: string;
   phone: string;
   openingHours: string;
@@ -34,13 +33,14 @@ export interface ActivityCreateRequest {
 export interface ActivityUpdateRequest {
   title?: string;
   description?: string;
-  category?: string;
+  category?: number;
   address?: string;
   phone?: string;
   openingHours?: string;
   website?: string;
   order?: number;
   day?: number;
+  guideId?: number;
 }
 
 interface BackendActivity {
@@ -64,31 +64,6 @@ export class ActivityService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}`;
 
-  // Map category string to number for backend
-  private categoryToNumber(category: string): number {
-    const map: Record<string, number> = {
-      'museum': 0,
-      'park': 1,
-      'restaurant': 2,
-      'beach': 3,
-      'other': 4
-    };
-    return map[category] ?? 2;
-  }
-
-  // Map category number to string for frontend
-  private numberToCategory(num: number): 'museum' | 'park' | 'restaurant' | 'beach' | 'other' {
-    const map: Record<number, any> = {
-      0: 'museum',
-      1: 'park',
-      2: 'restaurant',
-      3: 'beach',
-      4: 'other'
-    };
-    return map[num] || 'restaurant';
-  }
-
-  // FIXED: Use correct endpoint /api/activities/guide/{guideId}
   getActivitiesForGuide(guideId: string): Observable<Activity[]> {
     const numericGuideId = parseInt(guideId, 10);
     return this.http.get<BackendActivity[]>(`${this.apiUrl}/activities/guide/${numericGuideId}`).pipe(
@@ -97,7 +72,7 @@ export class ActivityService {
         guideId: a.guideId,
         title: a.title,
         description: a.description,
-        category: this.numberToCategory(a.categoryCategory),
+        category: a.categoryCategory,
         address: a.address || '',
         phone: a.phone || '',
         openingHours: a.schedule || '',
@@ -108,12 +83,11 @@ export class ActivityService {
     );
   }
 
-  // FIXED: Use correct endpoint /api/activities (POST)
   addActivity(activityData: ActivityCreateRequest): Observable<Activity> {
     const payload = {
       title: activityData.title,
       description: activityData.description,
-      categoryCategory: this.categoryToNumber(activityData.category),
+      categoryCategory: activityData.category,
       address: activityData.address || '',
       phone: activityData.phone || '',
       schedule: activityData.openingHours || '',
@@ -122,14 +96,16 @@ export class ActivityService {
       day: activityData.day,
       guideId: activityData.guideId
     };
-    console.log('Sending to backend (POST /api/activities):', payload);
+    
+    console.log('Sending to backend POST /api/activities:', payload);
+    
     return this.http.post<BackendActivity>(`${this.apiUrl}/activities`, payload).pipe(
       map(a => ({
         id: a.id,
         guideId: a.guideId,
         title: a.title,
         description: a.description,
-        category: this.numberToCategory(a.categoryCategory),
+        category: a.categoryCategory,
         address: a.address || '',
         phone: a.phone || '',
         openingHours: a.schedule || '',
@@ -140,38 +116,32 @@ export class ActivityService {
     );
   }
 
-  // FIXED: Use correct endpoint /api/activities/{id} (PUT)
-  updateActivity(activityId: number, activityData: ActivityUpdateRequest): Observable<Activity> {
+  // FIXED: Update returns boolean success, not the activity object
+  updateActivity(activityId: number, activityData: ActivityUpdateRequest): Observable<boolean> {
     const payload: any = {};
+    
     if (activityData.title !== undefined) payload.title = activityData.title;
     if (activityData.description !== undefined) payload.description = activityData.description;
-    if (activityData.category !== undefined) payload.categoryCategory = this.categoryToNumber(activityData.category);
+    if (activityData.category !== undefined) payload.categoryCategory = activityData.category;
     if (activityData.address !== undefined) payload.address = activityData.address;
     if (activityData.phone !== undefined) payload.phone = activityData.phone;
     if (activityData.openingHours !== undefined) payload.schedule = activityData.openingHours;
     if (activityData.website !== undefined) payload.website = activityData.website;
     if (activityData.order !== undefined) payload.order = activityData.order;
     if (activityData.day !== undefined) payload.day = activityData.day;
+    if (activityData.guideId !== undefined) payload.guideId = activityData.guideId;
 
-    console.log('Updating backend (PUT /api/activities/' + activityId + '):', payload);
-    return this.http.put<BackendActivity>(`${this.apiUrl}/activities/${activityId}`, payload).pipe(
-      map(a => ({
-        id: a.id,
-        guideId: a.guideId,
-        title: a.title,
-        description: a.description,
-        category: this.numberToCategory(a.categoryCategory),
-        address: a.address || '',
-        phone: a.phone || '',
-        openingHours: a.schedule || '',
-        website: a.website || '',
-        order: a.order,
-        day: a.day
-      }))
+    console.log('Updating backend PUT /api/activities/' + activityId + ':', payload);
+    
+    return this.http.put<void>(`${this.apiUrl}/activities/${activityId}`, payload).pipe(
+      map(() => true),
+      catchError((error) => {
+        console.error('Update failed:', error);
+        return of(false);
+      })
     );
   }
 
-  // FIXED: Use correct endpoint /api/activities/{id} (DELETE)
   deleteActivity(activityId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/activities/${activityId}`);
   }

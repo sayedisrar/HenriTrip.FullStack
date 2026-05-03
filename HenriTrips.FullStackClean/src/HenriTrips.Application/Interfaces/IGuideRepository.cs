@@ -11,4 +11,9 @@ public interface IGuideRepository
     Task DeleteAsync(int id);
     
     Task AddUserToGuide(string userId, int guideId);
+
+    // NEW METHODS
+    Task<List<string>> GetUserInvitedGuideIdsAsync(string userId);
+    Task<bool> RemoveUserFromGuideAsync(string userId, int guideId);
+    Task<List<Guide>> GetGuidesByUserIdAsync(string userId);
 }

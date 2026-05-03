@@ -28,14 +28,14 @@ import { ActivityService, Activity } from '../../../core/services/activity.servi
           
           <div class="form-group" style="flex: 1;">
             <label class="form-label">Category *</label>
-    <select class="form-control" formControlName="category" required>
-  <option value="" disabled>Select Category</option>
-  <option value="museum">🏛️ Museum</option>
-  <option value="park">🌳 Park</option>
-  <option value="restaurant">🍽️ Restaurant</option>
-  <option value="beach">🏖️ Beach</option>
-  <option value="other">📌 Other</option>
-</select>
+            <select class="form-control" formControlName="category" required>
+              <option value="" disabled>Select Category</option>
+              <option value="0">🏛️ Museum</option>
+              <option value="1">🌳 Park</option>
+              <option value="2">🍽️ Restaurant</option>
+              <option value="3">🏖️ Beach</option>
+              <option value="4">📌 Other</option>
+            </select>
           </div>
         </div>
 
@@ -161,20 +161,22 @@ import { ActivityService, Activity } from '../../../core/services/activity.servi
       font-size: 0.875rem;
     }
     
-.form-control {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: #000000;   
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md);
-  color: var(--text-main);
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: #000000;   
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    
     select.form-control option {
-  background: #000000;   
-  color: var(--text-main);
-}
+      background: #000000;   
+      color: var(--text-main);
+    }
+    
     .form-control:focus {
       outline: none;
       border-color: var(--primary);
@@ -278,7 +280,7 @@ export class ActivityFormComponent implements OnInit {
   activityForm: FormGroup = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
     description: ['', [Validators.required, Validators.minLength(10)]],
-    category: ['', Validators.required],  // Changed: removed default 'activity'
+    category: ['', Validators.required],  // Changed back to empty string for proper validation
     address: [''],
     phone: [''],
     openingHours: [''],
@@ -287,26 +289,18 @@ export class ActivityFormComponent implements OnInit {
   });
 
   ngOnInit() {
-    console.log('ActivityFormComponent - activityToEdit:', this.activityToEdit);
-
     if (this.activityToEdit) {
-      // FIXED: Make sure category value is set correctly
-      const categoryValue = this.activityToEdit.category;
-      console.log('Setting category to:', categoryValue);
-
+      // activityToEdit.category is already a number (0-4)
       this.activityForm.patchValue({
         title: this.activityToEdit.title,
         description: this.activityToEdit.description,
-        category: categoryValue,  // This should be 'museum', 'castle', etc.
+        category: this.activityToEdit.category.toString(),  // Convert number to string for select
         address: this.activityToEdit.address || '',
         phone: this.activityToEdit.phone || '',
         openingHours: this.activityToEdit.openingHours || '',
         website: this.activityToEdit.website || '',
         order: this.activityToEdit.order
       });
-
-      // Debug: Log the form value after patch
-      console.log('Form value after patch:', this.activityForm.value);
     }
   }
 
@@ -320,19 +314,18 @@ export class ActivityFormComponent implements OnInit {
 
     this.isSubmitting = true;
     const formValue = this.activityForm.value;
-    console.log('Submitting form values:', formValue);
 
     if (this.activityToEdit) {
       // UPDATE EXISTING ACTIVITY
       this.activityService.updateActivity(this.activityToEdit.id, {
         title: formValue.title,
         description: formValue.description,
-        category: formValue.category,
+        category: Number(formValue.category),  // Convert string to number
         address: formValue.address,
         phone: formValue.phone,
         openingHours: formValue.openingHours,
         website: formValue.website,
-        order: formValue.order,
+        order: Number(formValue.order),
         day: this.dayNumber
       }).subscribe({
         next: (updatedActivity) => {
@@ -351,12 +344,12 @@ export class ActivityFormComponent implements OnInit {
       this.activityService.addActivity({
         title: formValue.title,
         description: formValue.description,
-        category: formValue.category,
+        category: Number(formValue.category),  // Convert string to number
         address: formValue.address || '',
         phone: formValue.phone || '',
         openingHours: formValue.openingHours || '',
         website: formValue.website || '',
-        order: formValue.order,
+        order: Number(formValue.order),
         day: this.dayNumber,
         guideId: parseInt(this.guideId, 10)
       }).subscribe({
@@ -368,7 +361,18 @@ export class ActivityFormComponent implements OnInit {
         error: (error) => {
           console.error('Failed to create activity:', error);
           this.isSubmitting = false;
-          alert(`Failed to create activity: ${error.error?.message || error.message}`);
+          
+          // Show detailed error message
+          let errorMessage = 'Failed to create activity. ';
+          if (error.error?.errors) {
+            const messages = Object.values(error.error.errors).flat();
+            errorMessage += messages.join(', ');
+          } else if (error.error?.message) {
+            errorMessage += error.error.message;
+          } else if (error.message) {
+            errorMessage += error.message;
+          }
+          alert(errorMessage);
         }
       });
     }
