@@ -1,0 +1,6 @@
+{
+  "HenriTrips.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.FullStackClean\\src\\HenriTrips.Api",
+  "HenriTrips.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.FullStackClean\\src\\HenriTrips.Application",
+  "HenriTrips.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.FullStackClean\\src\\HenriTrips.Domain",
+  "HenriTrips.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.FullStackClean\\src\\HenriTrips.Infrastructure"
+}

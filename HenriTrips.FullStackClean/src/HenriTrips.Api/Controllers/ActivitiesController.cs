@@ -1,4 +1,5 @@
-﻿using HenriTrips.Application.DTOs.Activity;
+﻿using HenriTrips.Application.Common;
+using HenriTrips.Application.DTOs.Activity;
 using HenriTrips.Application.UseCases.Activities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,12 @@ public class ActivitiesController : ControllerBase
     public async Task<IActionResult> GetByGuide(int guideId)
     {
         var result = await _getByGuide.ExecuteAsync(guideId);
-        return Ok(result);
+
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Data = result
+        });
     }
 
     // POST: api/activities
@@ -40,8 +46,24 @@ public class ActivitiesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(ActivityCreateDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Invalid data",
+                Data = ModelState
+            });
+        }
+
         var id = await _createActivity.ExecuteAsync(dto);
-        return Ok(id);
+
+        return Ok(new ApiResponse<int>
+        {
+            Success = true,
+            Data = id,
+            Message = "Activity created successfully"
+        });
     }
 
     // PUT: api/activities/5
@@ -49,9 +71,32 @@ public class ActivitiesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, ActivityUpdateDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Invalid data",
+                Data = ModelState
+            });
+        }
+
         var ok = await _updateActivity.ExecuteAsync(id, dto);
-        if (!ok) return NotFound();
-        return Ok();
+
+        if (!ok)
+        {
+            return NotFound(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Activity not found"
+            });
+        }
+
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Activity updated successfully"
+        });
     }
 
     // DELETE: api/activities/5
@@ -60,7 +105,20 @@ public class ActivitiesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var ok = await _deleteActivity.ExecuteAsync(id);
-        if (!ok) return NotFound();
-        return Ok();
+
+        if (!ok)
+        {
+            return NotFound(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Activity not found"
+            });
+        }
+
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Activity deleted successfully"
+        });
     }
 }

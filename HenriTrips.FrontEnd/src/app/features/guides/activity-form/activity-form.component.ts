@@ -66,7 +66,7 @@ import { ToastService } from '../../../core/services/toast.service';
           </div>
           
           <div class="form-group" style="flex: 1;">
-            <label class="form-label">Opening Hours</label>
+            <label class="form-label">Opening Hours/Schedule</label>
             <input type="text" class="form-control" formControlName="openingHours" 
                    placeholder="Mon-Sun: 9:00-18:00">
           </div>

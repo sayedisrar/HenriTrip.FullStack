@@ -4,6 +4,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message: string;
+}
 export interface Guide {
   id: string;
   title: string;
@@ -87,35 +92,41 @@ export class GuideService {
     return backendData;
   }
 
-  getGuides(): Observable<Guide[]> {
-    return this.http.get<BackendGuide[]>(this.apiUrl).pipe(
-      map(guides => guides.map(guide => this.transformGuide(guide)))
-    );
-  }
+getGuides(): Observable<Guide[]> {
+  return this.http.get<ApiResponse<BackendGuide[]>>(this.apiUrl).pipe(
+    map(res => res.data.map(guide => this.transformGuide(guide)))
+  );
+}
 
-  getGuideById(id: string): Observable<Guide> {
-    const numericId = parseInt(id, 10);
-    return this.http.get<BackendGuide>(`${this.apiUrl}/${numericId}`).pipe(
-      map(guide => this.transformGuide(guide))
-    );
-  }
+getGuideById(id: string): Observable<Guide> {
+  const numericId = parseInt(id, 10);
+
+  return this.http.get<ApiResponse<BackendGuide>>(`${this.apiUrl}/${numericId}`).pipe(
+    map(res => this.transformGuide(res.data))
+  );
+}
 
   // FIXED: Backend returns just the ID (number), so fetch the full guide after creation
-  addGuide(guideData: any): Observable<Guide> {
-    const backendData = this.transformToBackend(guideData);
-    
-    console.log('Sending POST request to:', this.apiUrl);
-    console.log('Request body:', JSON.stringify(backendData, null, 2));
-    
-    // Backend returns just the ID (number)
-    return this.http.post<number>(this.apiUrl, backendData).pipe(
-      switchMap(guideId => {
-        console.log('Guide created with ID:', guideId);
-        // Fetch the full guide details using the returned ID
-        return this.getGuideById(guideId.toString());
-      })
-    );
-  }
+ addGuide(guideData: any): Observable<Guide> {
+  const backendData = this.transformToBackend(guideData);
+
+  console.log('Sending POST request to:', this.apiUrl);
+  console.log('Request body:', JSON.stringify(backendData, null, 2));
+
+  return this.http.post<ApiResponse<number>>(this.apiUrl, backendData).pipe(
+    switchMap(response => {
+      const guideId = response.data;
+
+      console.log('Guide created with ID:', guideId);
+
+      if (!guideId) {
+        throw new Error('Invalid guide ID returned from API');
+      }
+
+      return this.getGuideById(guideId.toString());
+    })
+  );
+}
 
   updateGuide(id: string, guideData: any): Observable<Guide> {
     const numericId = parseInt(id, 10);

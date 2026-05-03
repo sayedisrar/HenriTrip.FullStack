@@ -68,7 +68,7 @@ import { ToastService } from '../../../core/services/toast.service';
               </svg>
             </div>
             <div class="detail-content">
-              <span class="detail-label">Opening Hours</span>
+              <span class="detail-label">Opening Hours/Schedule</span>
               <span class="detail-value">{{ act.openingHours }}</span>
             </div>
           </div>
