@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { UserService, User } from '../../../core/services/user.service';
 import { GuideService, Guide } from '../../../core/services/guide.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-user-form',
@@ -312,6 +313,7 @@ export class UserFormComponent implements OnInit {
   private guideService = inject(GuideService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private toast = inject(ToastService);
 
   isEditMode = false;
   userId: string | null = null;
@@ -462,6 +464,7 @@ console.log('newPassword:', newPassword ? 'Has password (not empty)' : 'No passw
       this.userService.updateUser(this.userId, updateData, newPassword).subscribe({
         next: (updatedUser) => {
           console.log('User basic info updated successfully:', updatedUser);
+          this.toast.showSuccess('User updated successfully!', 'Update Complete');
 
           // Step 2: Update guide invitations (THIS IS WHAT WAS MISSING!)
           const invitedGuideIds = formValue.invitedGuideIds || [];
@@ -480,7 +483,7 @@ console.log('newPassword:', newPassword ? 'Has password (not empty)' : 'No passw
               },
               error: (error) => {
                 console.error('Failed to update guide invitations:', error);
-                alert('User updated but guide invitations failed to save. Check console for details.');
+                this.toast.showWarning('User updated but guide invitations failed to save. Check console for details.', 'Partial Success');
                 this.userService.refreshUsers();
                 this.router.navigate(['/dashboard/users']);
               }
@@ -503,7 +506,7 @@ console.log('newPassword:', newPassword ? 'Has password (not empty)' : 'No passw
         },
         error: (error) => {
           console.error('Failed to update user:', error);
-          alert(`Failed to update user: ${error.message || 'Please try again.'}`);
+          this.toast.showError(`Failed to update user: ${error.message || 'Please try again.'}`, 'Update Failed');
         }
       });
     } else {
@@ -521,6 +524,7 @@ console.log('newPassword:', newPassword ? 'Has password (not empty)' : 'No passw
 this.userService.addUser(userData).subscribe({
   next: (response: any) => {
     console.log('User created successfully:', response);
+    this.toast.showSuccess('User created successfully!', 'Creation Complete');
     const newUserId = response.data?.userId || response.userId;
     
     // Save guide invitations AFTER user exists
@@ -534,7 +538,7 @@ this.userService.addUser(userData).subscribe({
         },
         error: (error) => {
           console.error('Failed to save guide invitations:', error);
-          alert('User created but failed to save guide invitations.');
+          this.toast.showWarning('User created but failed to save guide invitations.', 'Partial Success');
           this.userService.refreshUsers();
           this.router.navigate(['/dashboard/users']);
         }
@@ -546,7 +550,7 @@ this.userService.addUser(userData).subscribe({
   },
   error: (error) => {
     console.error('Failed to create user:', error);
-    alert('Failed to create user. ' + (error.error?.message || error.message));
+    this.toast.showError('Failed to create user. ' + (error.error?.message || error.message), 'Creation Failed');
   }
 });
     }

@@ -3,6 +3,7 @@ import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Activity } from '../../../core/services/activity.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-activity-list',
@@ -408,6 +409,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class ActivityListComponent {
   auth = inject(AuthService);
+  private toast = inject(ToastService);
 
   @Input() activities: Activity[] = [];
   @Output() edit = new EventEmitter<Activity>();
@@ -434,7 +436,9 @@ export class ActivityListComponent {
   }
 
   deleteActivity(act: Activity) {
-    if (confirm(`Delete "${act.title}"? This action cannot be undone.`)) {
-      this.delete.emit(act);
-    }
+    this.toast.showConfirm(`Delete "${act.title}"? This action cannot be undone.`, 'Delete Activity').then((confirmed) => {
+      if (confirmed) {
+        this.delete.emit(act);
+      }
+    });
   }

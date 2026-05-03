@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { RegisterRequest } from '../../core/models/auth.models';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-register',
@@ -82,6 +83,7 @@ export class RegisterComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private toast = inject(ToastService);
 
   isLoading = false;
   errorMessage = '';
@@ -104,7 +106,7 @@ export class RegisterComponent {
     this.auth.register(registerRequest).subscribe({
       next: (response: any) => {
         this.isLoading = false;
-        this.successMessage = response.message || 'Account created successfully!';
+        this.toast.showSuccess(response.message || 'Account created successfully!', 'Registration Complete');
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 1500);

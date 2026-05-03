@@ -3,6 +3,7 @@ import { Component, EventEmitter, inject, Input, Output, OnInit } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivityService, Activity } from '../../../core/services/activity.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-activity-form',
@@ -274,6 +275,7 @@ export class ActivityFormComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private activityService = inject(ActivityService);
+  private toast = inject(ToastService);
 
   isSubmitting = false;
 
@@ -331,12 +333,13 @@ export class ActivityFormComponent implements OnInit {
         next: (updatedActivity) => {
           console.log('Activity updated successfully:', updatedActivity);
           this.isSubmitting = false;
+          this.toast.showSuccess('Activity updated successfully!', 'Update Complete');
           this.formClosed.emit({ success: true });
         },
         error: (error) => {
           console.error('Failed to update activity:', error);
           this.isSubmitting = false;
-          alert(`Failed to update activity: ${error.error?.message || error.message}`);
+          this.toast.showError(`Failed to update activity: ${error.error?.message || error.message}`, 'Update Failed');
         }
       });
     } else {
@@ -356,6 +359,7 @@ export class ActivityFormComponent implements OnInit {
         next: (createdActivity) => {
           console.log('Activity created successfully:', createdActivity);
           this.isSubmitting = false;
+          this.toast.showSuccess('Activity created successfully!', 'Creation Complete');
           this.formClosed.emit({ success: true });
         },
         error: (error) => {
@@ -372,7 +376,7 @@ export class ActivityFormComponent implements OnInit {
           } else if (error.message) {
             errorMessage += error.message;
           }
-          alert(errorMessage);
+          this.toast.showError(errorMessage, 'Creation Failed');
         }
       });
     }

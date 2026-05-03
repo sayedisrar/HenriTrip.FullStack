@@ -2,6 +2,7 @@ import { Component, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UserService, User } from '../../../core/services/user.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-user-list',
@@ -330,6 +331,7 @@ import { UserService, User } from '../../../core/services/user.service';
 })
 export class UserListComponent implements OnInit {
   userService = inject(UserService);
+  private toast = inject(ToastService);
   users: User[] = [];
   isLoading = true;
   isDeleting: string | null = null;
@@ -391,40 +393,42 @@ export class UserListComponent implements OnInit {
 
   deleteUser(user: User) {
     if (user.role === 'admin') {
-      alert('Cannot delete admin users');
+      this.toast.showWarning('Cannot delete admin users', 'Admin Protection');
       return;
     }
 
-    if (confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
-      this.isDeleting = user.id;
+    this.toast.showConfirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`, 'Delete User').then((confirmed) => {
+      if (confirmed) {
+        this.isDeleting = user.id;
 
-      this.userService.deleteUser(user.id).subscribe({
-        next: (response) => {
-          console.log('User deleted successfully:', response);
-          this.isDeleting = null;
-          // Reload users after delete
-          this.userService.getAllUsers().subscribe({
-            next: (users) => {
-              this.userService.loadUsers();
-              setTimeout(() => {
-                this.users = this.userService.getUsers();
-              }, 1000);
+        this.userService.deleteUser(user.id).subscribe({
+          next: (response) => {
+            console.log('User deleted successfully:', response);
+            this.isDeleting = null;
+            // Reload users after delete
+            this.userService.getAllUsers().subscribe({
+              next: (users) => {
+                this.userService.loadUsers();
+                setTimeout(() => {
+                  this.users = this.userService.getUsers();
+                }, 1000);
+              }
+            });
+          },
+          error: (error) => {
+            console.error('Failed to delete user:', error);
+            this.isDeleting = null;
+
+            let errorMessage = 'Failed to delete user. ';
+            if (error.error?.message) {
+              errorMessage += error.error.message;
+            } else if (error.message) {
+              errorMessage += error.message;
             }
-          });
-        },
-        error: (error) => {
-          console.error('Failed to delete user:', error);
-          this.isDeleting = null;
-
-          let errorMessage = 'Failed to delete user. ';
-          if (error.error?.message) {
-            errorMessage += error.error.message;
-          } else if (error.message) {
-            errorMessage += error.message;
+            this.toast.showError(errorMessage, 'Delete Failed');
           }
-          alert(errorMessage);
-        }
-      });
-    }
+        });
+      }
+    });
   }
 }

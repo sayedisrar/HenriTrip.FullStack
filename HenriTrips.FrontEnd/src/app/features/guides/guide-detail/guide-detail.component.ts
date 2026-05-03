@@ -6,6 +6,7 @@ import { GuideService, Guide } from '../../../core/services/guide.service';
 import { ActivityService, Activity } from '../../../core/services/activity.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ActivityFormComponent } from '../activity-form/activity-form.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-guide-detail',
@@ -849,6 +850,7 @@ export class GuideDetailComponent implements OnInit {
   private router = inject(Router);
   private guideService = inject(GuideService);
   private activityService = inject(ActivityService);
+  private toast = inject(ToastService);
   auth = inject(AuthService);
 
   guide: Guide | undefined;
@@ -940,20 +942,22 @@ getCategoryIcon(category: number): string {
   }
 
   deleteActivity(activity: Activity) {
-    if (confirm(`Delete "${activity.title}"? This action cannot be undone.`)) {
-      this.activityService.deleteActivity(activity.id).subscribe({
-        next: () => {
-          console.log('Activity deleted successfully');
-          if (this.guide) {
-            this.loadActivities(this.guide.id);
+    this.toast.showConfirm(`Delete "${activity.title}"? This action cannot be undone.`, 'Delete Activity').then((confirmed) => {
+      if (confirmed) {
+        this.activityService.deleteActivity(activity.id).subscribe({
+          next: () => {
+            console.log('Activity deleted successfully');
+            if (this.guide) {
+              this.loadActivities(this.guide.id);
+            }
+          },
+          error: (error) => {
+            console.error('Failed to delete activity:', error);
+            this.toast.showError(`Failed to delete activity: ${error.error?.message || error.message}`, 'Delete Failed');
           }
-        },
-        error: (error) => {
-          console.error('Failed to delete activity:', error);
-          alert(`Failed to delete activity: ${error.error?.message || error.message}`);
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   closeActivityForm(event?: { success?: boolean }) {

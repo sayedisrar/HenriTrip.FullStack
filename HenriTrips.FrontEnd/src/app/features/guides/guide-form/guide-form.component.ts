@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { GuideService, Guide } from '../../../core/services/guide.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-guide-form',
@@ -96,13 +97,14 @@ import { GuideService, Guide } from '../../../core/services/guide.service';
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary" [disabled]="guideForm.invalid">
+            <button type="submit" class="btn btn-primary" [disabled]="guideForm.invalid || isSubmitting">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                 <polyline points="17 21 17 13 7 13 7 21"/>
                 <polyline points="7 3 7 8 15 8"/>
               </svg>
-              {{ isEditMode ? 'Save Changes' : 'Create Guide' }}
+              <span *ngIf="isSubmitting">Saving...</span>
+              <span *ngIf="!isSubmitting">{{ isEditMode ? 'Save Changes' : 'Create Guide' }}</span>
             </button>
           </div>
         </form>
@@ -305,6 +307,7 @@ export class GuideFormComponent implements OnInit {
   private guideService = inject(GuideService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private toastService = inject(ToastService);
 
   isEditMode = false;
   guideId: string | null = null;
@@ -336,6 +339,7 @@ export class GuideFormComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error loading guide:', error);
+            this.toastService.showError('Failed to load guide details', 'Error');
             this.router.navigate(['/dashboard']);
           }
         });
@@ -372,6 +376,7 @@ export class GuideFormComponent implements OnInit {
       Object.keys(this.guideForm.controls).forEach(key => {
         this.guideForm.get(key)?.markAsTouched();
       });
+      this.toastService.showWarning('Please fill in all required fields', 'Incomplete Form');
       return;
     }
 
@@ -393,6 +398,7 @@ export class GuideFormComponent implements OnInit {
       this.guideService.updateGuide(this.guideId, submitData).subscribe({
         next: () => {
           this.isSubmitting = false;
+          this.toastService.showSuccess('Guide updated successfully!', 'Success');
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
@@ -401,12 +407,11 @@ export class GuideFormComponent implements OnInit {
           
           // Display validation errors from backend
           if (error.error?.errors) {
-            const errorMessages = Object.values(error.error.errors).flat();
-            alert(`Validation failed:\n${errorMessages.join('\n')}`);
+            this.toastService.showValidationErrors(error.error, 'Validation Failed');
           } else if (error.error?.title) {
-            alert(`Failed to update guide: ${error.error.title}`);
+            this.toastService.showError(error.error.title, 'Update Failed');
           } else {
-            alert('Failed to update guide. Please try again.');
+            this.toastService.showError('Failed to update guide. Please try again.', 'Update Failed');
           }
         }
       });
@@ -414,6 +419,7 @@ export class GuideFormComponent implements OnInit {
       this.guideService.addGuide(submitData).subscribe({
         next: () => {
           this.isSubmitting = false;
+          this.toastService.showSuccess('Guide created successfully!', 'Success');
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
@@ -422,12 +428,11 @@ export class GuideFormComponent implements OnInit {
           
           // Display validation errors from backend
           if (error.error?.errors) {
-            const errorMessages = Object.values(error.error.errors).flat();
-            alert(`Validation failed:\n${errorMessages.join('\n')}`);
+            this.toastService.showValidationErrors(error.error, 'Validation Failed');
           } else if (error.error?.title) {
-            alert(`Failed to create guide: ${error.error.title}`);
+            this.toastService.showError(error.error.title, 'Creation Failed');
           } else {
-            alert('Failed to create guide. Please try again.');
+            this.toastService.showError('Failed to create guide. Please try again.', 'Creation Failed');
           }
         }
       });

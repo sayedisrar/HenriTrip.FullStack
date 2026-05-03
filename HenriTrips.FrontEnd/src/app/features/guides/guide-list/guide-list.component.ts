@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { GuideService, Guide } from '../../../core/services/guide.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-guide-list',
@@ -339,6 +340,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class GuideListComponent implements OnInit {
   private guideService = inject(GuideService);
+  private toast = inject(ToastService);
   auth = inject(AuthService);
 
   guides: Guide[] = [];
@@ -382,16 +384,18 @@ export class GuideListComponent implements OnInit {
 
   deleteGuide(id: string, event: Event) {
     event.stopPropagation();
-    if (confirm('Are you sure you want to delete this guide and all its activities?')) {
-      this.guideService.deleteGuide(id).subscribe({
-        next: () => {
-          this.loadGuides();
-        },
-        error: (error) => {
-          console.error('Error deleting guide:', error);
-          alert('Failed to delete guide. Please try again.');
-        }
-      });
-    }
+    this.toast.showConfirm('Are you sure you want to delete this guide and all its activities?', 'Delete Guide').then((confirmed) => {
+      if (confirmed) {
+        this.guideService.deleteGuide(id).subscribe({
+          next: () => {
+            this.loadGuides();
+          },
+          error: (error) => {
+            console.error('Error deleting guide:', error);
+            this.toast.showError('Failed to delete guide. Please try again.', 'Delete Failed');
+          }
+        });
+      }
+    });
   }
 }
