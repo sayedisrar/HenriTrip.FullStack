@@ -70,6 +70,38 @@
   },
   {
     "ContainingType": "HenriTrips.Api.Controllers.AuthController",
+    "Method": "CreateUser",
+    "RelativePath": "api/Auth/create-user",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HenriTrips.Application.DTOs.Auth.CreateUserDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HenriTrips.Api.Controllers.AuthController",
+    "Method": "DeleteUser",
+    "RelativePath": "api/Auth/delete-user/{userId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HenriTrips.Api.Controllers.AuthController",
     "Method": "Login",
     "RelativePath": "api/Auth/login",
     "HttpMethod": "POST",
@@ -95,6 +127,53 @@
       {
         "Name": "dto",
         "Type": "HenriTrips.Application.DTOs.Auth.RegisterDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HenriTrips.Api.Controllers.AuthController",
+    "Method": "GetAllUsers",
+    "RelativePath": "api/Auth/users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HenriTrips.Api.Controllers.AuthController",
+    "Method": "GetUserById",
+    "RelativePath": "api/Auth/users/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HenriTrips.Api.Controllers.AuthController",
+    "Method": "UpdateUser",
+    "RelativePath": "api/Auth/users/{userId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "HenriTrips.Application.DTOs.Auth.UpdateUserDto",
         "IsRequired": true
       }
     ],
@@ -128,9 +207,46 @@
   },
   {
     "ContainingType": "HenriTrips.Api.Controllers.GuidesController",
+    "Method": "GetActivitiesByGuideIdCompatibility",
+    "RelativePath": "api/Guides/{guideId}/activities",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "guideId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HenriTrips.Api.Controllers.GuidesController",
     "Method": "Invite",
     "RelativePath": "api/Guides/{guideId}/invite/{userId}",
     "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "guideId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HenriTrips.Api.Controllers.GuidesController",
+    "Method": "RemoveUserFromGuide",
+    "RelativePath": "api/Guides/{guideId}/remove-user/{userId}",
+    "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -201,8 +317,24 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "HenriTrips.Api.Controllers.GuidesController",
+    "Method": "GetUserInvitedGuides",
+    "RelativePath": "api/Guides/user/{userId}/invited-guides",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Program\u002B\u003C\u003Ec",
-    "Method": "\u003C\u003CMain\u003E$\u003Eb__0_2",
+    "Method": "\u003C\u003CMain\u003E$\u003Eb__0_5",
     "RelativePath": "health",
     "HttpMethod": "GET",
     "IsController": false,

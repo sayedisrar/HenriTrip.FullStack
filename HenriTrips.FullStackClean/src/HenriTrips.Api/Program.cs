@@ -3,8 +3,8 @@ using FluentValidation.AspNetCore;
 using HenriTrips.Api.Middleware;
 using HenriTrips.Application.Interfaces;
 using HenriTrips.Application.UseCases.Activities;
+using HenriTrips.Application.UseCases.Auth.Users;
 using HenriTrips.Application.UseCases.Guides;
-using HenriTrips.Application.UseCases.Users;
 using HenriTrips.Application.Validators.Guide;
 using HenriTrips.Infrastructure.Data;
 using HenriTrips.Infrastructure.Identity;
@@ -109,6 +109,8 @@ builder.Services.AddScoped<TokenService>();
 
 builder.Services.AddScoped<IGuideRepository, GuideRepository>();
 builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
+builder.Services.AddScoped<IGuideUserRepository, GuideUserRepository>();
+
 #endregion
 
 #region USE CASES
@@ -144,6 +146,7 @@ builder.Services.AddScoped<GetUserById>();
 builder.Services.AddScoped<CreateUser>();
 builder.Services.AddScoped<UpdateUser>();
 builder.Services.AddScoped<DeleteUser>();
+
 #endregion
 
 #region Guide Permission Use Cases

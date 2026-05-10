@@ -14,6 +14,8 @@ public class GetUserInvitedGuides
 
     public async Task<List<string>> ExecuteAsync(string userId)
     {
-        return await _guideRepository.GetUserInvitedGuideIdsAsync(userId);
+        var guideIds = await _guideRepository.GetUserInvitedGuideIdsAsync(userId);
+        Console.WriteLine($"GetUserInvitedGuides for user {userId}: found {guideIds.Count} guides");
+        return guideIds;
     }
 }

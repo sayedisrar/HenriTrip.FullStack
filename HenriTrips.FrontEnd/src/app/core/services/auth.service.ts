@@ -1,14 +1,15 @@
 // src/app/core/services/auth.service.ts
 import { Injectable, signal, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, catchError, throwError } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { map, catchError, throwError, switchMap, of } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
 import { 
   LoginRequest, 
   RegisterRequest, 
   LoginApiResponse,
-  RegisterApiResponse
+  RegisterApiResponse,
+  ApiResponse
 } from '../models/auth.models';
 
 export interface User {
@@ -16,7 +17,7 @@ export interface User {
   name: string;
   email: string;
   role: 'admin' | 'user';
-  invitedGuideIds?: string[];
+  invitedGuideIds: string[];
 }
 
 @Injectable({
@@ -57,16 +58,48 @@ export class AuthService {
 
   login(model: LoginRequest) {
     return this.http.post<LoginApiResponse>(`${this.apiUrl}/login`, model).pipe(
-      map(response => {
-        console.log('Login API response:', response);
+      switchMap(response => {
+        console.log('🔵 Login API response:', response);
         
         if (response.success && response.data) {
-          // Store token (response.data contains the token string)
           localStorage.setItem('henri_trips_jwt', response.data);
-          this.decodeAndSetUser(response.data);
-          return { success: true, token: response.data };
+          
+          const decodedUser = this.decodeUserFromToken(response.data);
+          console.log('🔵 Decoded user from token:', decodedUser);
+          
+          if (decodedUser && decodedUser.role !== 'admin') {
+            return this.fetchUserInvitedGuides(decodedUser.id).pipe(
+              map(invitedGuideIds => ({
+                id: decodedUser.id,
+                name: decodedUser.name,
+                email: decodedUser.email,
+                role: decodedUser.role,
+                invitedGuideIds: invitedGuideIds
+              }))
+            );
+          }
+          
+          if (decodedUser) {
+            return of({
+              id: decodedUser.id,
+              name: decodedUser.name,
+              email: decodedUser.email,
+              role: decodedUser.role,
+              invitedGuideIds: []
+            });
+          }
+          
+          return of(null);
         }
         throw new Error(response.message || 'Login failed');
+      }),
+      map(user => {
+        if (user) {
+          this.currentUser.set(user);
+          console.log('✅ User set in signal:', this.currentUser());
+          return { success: true, token: this.getToken()! };
+        }
+        throw new Error('Failed to load user data');
       }),
       catchError(this.handleError)
     );
@@ -102,12 +135,46 @@ export class AuthService {
     }
   }
 
-  private decodeAndSetUser(token: string) {
+  // Fetch user's invited guides from backend
+  private fetchUserInvitedGuides(userId: string) {
+    console.log('🔵 FETCHING INVITED GUIDES FOR USER:', userId);
+    
+    // Get token directly from localStorage
+    const token = localStorage.getItem('henri_trips_jwt');
+    
+    // Create headers manually
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    return this.http.get(
+      `${this.apiUrl}/users/${userId}/invited-guides`,
+      { headers: headers }
+    ).pipe(
+      map((response: any) => {
+        console.log('🔵 INVITED GUIDES API RESPONSE:', response);
+        
+        if (response && response.success && response.data) {
+          const guideIds = response.data.map((id: any) => id.toString());
+          console.log('🔵 FINAL INVITED GUIDE IDs (strings):', guideIds);
+          return guideIds;
+        }
+        console.log('🔵 No invited guides found');
+        return [];
+      }),
+      catchError((error) => {
+        console.error('🔴 FAILED to fetch invited guides:', error);
+        return of([]);
+      })
+    );
+  }
+
+  private decodeUserFromToken(token: string): { id: string; name: string; email: string; role: 'admin' | 'user' } | null {
     try {
       const decoded: any = jwtDecode(token);
-      console.log('Decoded token:', decoded);
+      console.log('🔵 Decoded JWT token:', decoded);
 
-      // Handle different claim types
       const roleClaim = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] 
         || decoded.role 
         || decoded['role'];
@@ -126,7 +193,6 @@ export class AuthService {
         || decoded.nameid 
         || decoded['id'];
 
-      // Determine role (handle both string and array)
       let role: 'admin' | 'user' = 'user';
       if (roleClaim) {
         if (Array.isArray(roleClaim)) {
@@ -136,23 +202,61 @@ export class AuthService {
         }
       }
 
-      this.currentUser.set({
+      return {
         id: id || 'unknown',
         name: name || 'User',
         email: email || '',
-        role: role,
-        invitedGuideIds: []
-      });
-      
-      console.log('User set:', this.currentUser());
+        role: role
+      };
     } catch (e) {
-      console.error('Failed to decode token:', e);
-      this.logout();
+      console.error('🔴 Failed to decode token:', e);
+      return null;
+    }
+  }
+
+  private decodeAndSetUser(token: string) {
+    const user = this.decodeUserFromToken(token);
+    
+    if (user) {
+      if (user.role === 'admin') {
+        this.currentUser.set({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          invitedGuideIds: []
+        });
+        console.log('✅ Admin user set:', this.currentUser());
+      } else {
+        console.log('🔵 Fetching invites for regular user:', user.id);
+        this.fetchUserInvitedGuides(user.id).subscribe({
+          next: (invitedGuideIds) => {
+            this.currentUser.set({
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              invitedGuideIds: invitedGuideIds
+            });
+            console.log('✅ Regular user set with invites:', this.currentUser());
+          },
+          error: (error) => {
+            console.error('🔴 Failed to load invites:', error);
+            this.currentUser.set({
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              invitedGuideIds: []
+            });
+          }
+        });
+      }
     }
   }
 
   private handleError(error: any) {
-    console.error('AuthService Error Details:', error);
+    console.error('🔴 AuthService Error Details:', error);
     
     let errorMessage = 'An error occurred';
     
@@ -164,7 +268,7 @@ export class AuthService {
     } else if (error.status === 401) {
       errorMessage = 'Invalid email or password';
     } else if (error.status === 0) {
-      errorMessage = 'Cannot connect to server. Please check if the API is running on port 5172 or 7173.';
+      errorMessage = 'Cannot connect to server. Please check if the API is running.';
     } else if (error.message) {
       errorMessage = error.message;
     }

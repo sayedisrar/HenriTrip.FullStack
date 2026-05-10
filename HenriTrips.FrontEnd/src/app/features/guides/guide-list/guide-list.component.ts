@@ -351,18 +351,46 @@ export class GuideListComponent implements OnInit {
     this.loadGuides();
   }
 
-  loadGuides() {
-    this.guideService.getGuides().subscribe({
-      next: (guides) => {
+loadGuides() {
+  this.guideService.getGuides().subscribe({
+    next: (guides) => {
+      console.log('🔵🔵🔵 ALL GUIDES FROM API:', guides.map(g => ({ id: g.id, title: g.title })));
+      console.log('🔵🔵🔵 CURRENT USER:', this.auth.currentUser());
+      console.log('🔵🔵🔵 IS ADMIN:', this.auth.isAdmin());
+      console.log('🔵🔵🔵 USER INVITED GUIDE IDs:', this.auth.currentUser()?.invitedGuideIds);
+      
+      // Filter guides for non-admin users
+      if (!this.auth.isAdmin()) {
+        const userInvitedGuideIds = this.auth.currentUser()?.invitedGuideIds || [];
+        
+        console.log('🔵 User invited guide IDs (strings):', userInvitedGuideIds);
+        
+        if (userInvitedGuideIds.length === 0) {
+          console.log('⚠️ User has no invited guides - showing empty list');
+          this.guides = [];
+        } else {
+          // Filter guides - only show those the user is invited to
+          this.guides = guides.filter(guide => {
+            const guideIdAsString = guide.id.toString();
+            const isInvited = userInvitedGuideIds.includes(guideIdAsString);
+            console.log(`🔵 Guide ${guide.id} (${guide.title}): invited = ${isInvited}`);
+            return isInvited;
+          });
+          console.log('✅ FILTERED GUIDES FOR USER:', this.guides.map(g => ({ id: g.id, title: g.title })));
+        }
+      } else {
         this.guides = guides;
-        this.filteredGuides = guides;
-        this.applyFilter();
-      },
-      error: (error) => {
-        console.error('Error loading guides:', error);
+        console.log('✅ Admin user - showing all guides:', this.guides.map(g => ({ id: g.id, title: g.title })));
       }
-    });
-  }
+      
+      this.filteredGuides = this.guides;
+      this.applyFilter();
+    },
+    error: (error) => {
+      console.error('🔴 Error loading guides:', error);
+    }
+  });
+}
 
   onSearch(event: Event) {
     const target = event.target as HTMLInputElement;

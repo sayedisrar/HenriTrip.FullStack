@@ -105,13 +105,16 @@ import { ToastService } from '../../../core/services/toast.service';
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-              {{ isEditMode ? 'Save Changes' : 'Create User' }}
+            <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid || isSubmitting">
+              <span *ngIf="isSubmitting">Saving...</span>
+              <span *ngIf="!isSubmitting">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                {{ isEditMode ? 'Save Changes' : 'Create User' }}
+              </span>
             </button>
           </div>
         </form>
@@ -319,13 +322,14 @@ export class UserFormComponent implements OnInit {
   userId: string | null = null;
   availableGuides: Guide[] = [];
   isLoading = false;
+  isSubmitting = false;
 
   userForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.minLength(6)]],
     role: ['user', Validators.required],
-    invitedGuideIds: [[] as string[]]
+    invitedGuideIds: [[]]  // Initialize as empty array
   });
 
   ngOnInit() {
@@ -346,7 +350,6 @@ export class UserFormComponent implements OnInit {
       if (id) {
         this.isEditMode = true;
         this.userId = id;
-        // IMPORTANT: Use getUserWithInvites to load user WITH their invited guides
         this.loadUserData(id);
       } else {
         // Create mode - password is required
@@ -356,204 +359,176 @@ export class UserFormComponent implements OnInit {
     });
   }
 
-  private loadUserData(id: string) {
-    this.isLoading = true;
+private loadUserData(id: string) {
+  this.isLoading = true;
+  console.log('🔵 Loading user data for edit, ID:', id);
 
-    // FIXED: Use getUserWithInvites instead of getUserByIdFromApi
-    // This loads both user info AND their invited guides from GuideUsers table
-    this.userService.getUserWithInvites(id).subscribe({
-      next: (user) => {
-        console.log('Loaded user with invites:', user);
-        console.log('Invited guide IDs from database:', user.invitedGuideIds);
+  this.userService.getUserWithInvites(id).subscribe({
+    next: (user) => {
+      console.log('🔵 Loaded user with invites:', user);
+      console.log('🔵 Invited guide IDs from database:', user.invitedGuideIds);
 
-        this.userForm.patchValue({
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          invitedGuideIds: user.invitedGuideIds || []  // This now has the guide IDs from database!
-        });
+      // Ensure invitedGuideIds is always an array
+      const invitedGuideIds = Array.isArray(user.invitedGuideIds) ? user.invitedGuideIds : [];
+      
+      // Keep as strings for checkbox comparison
+      const invitedGuideIdsAsStrings = invitedGuideIds.map(id => id.toString());
+      console.log('🔵 Setting form invitedGuideIds to:', invitedGuideIdsAsStrings);
+      
+      // CRITICAL FIX: Set the name field correctly
+      this.userForm.patchValue({
+        name: user.name,        // Make sure this is set
+        email: user.email,
+        role: user.role,
+        invitedGuideIds: invitedGuideIdsAsStrings
+      });
 
-        // Password not required for edit
-        this.userForm.get('password')?.clearValidators();
-        this.userForm.get('password')?.updateValueAndValidity();
+      console.log('🔵 Form values after patch:', this.userForm.value);
 
-        if (user.role === 'admin') {
-          this.userForm.get('role')?.disable();
-        }
+      // Log which guides should be checked
+      console.log('🔵 Guides that should be selected:', invitedGuideIdsAsStrings);
+      
+      // Verify the checkboxes will show correctly
+      this.availableGuides.forEach(guide => {
+        const isSelected = invitedGuideIdsAsStrings.includes(guide.id.toString());
+        console.log(`🔵 Guide ${guide.id} (${guide.title}): selected = ${isSelected}`);
+      });
 
-        this.isLoading = false;
+      // Password not required for edit
+      this.userForm.get('password')?.clearValidators();
+      this.userForm.get('password')?.updateValueAndValidity();
+
+      if (user.role === 'admin') {
+        this.userForm.get('role')?.disable();
+      }
+
+      this.isLoading = false;
+    },
+    error: (error) => {
+      console.error('🔴 Failed to load user with invites:', error);
+      this.isLoading = false;
+      this.toast.showError('Failed to load user data', 'Error');
+      this.router.navigate(['/dashboard/users']);
+    }
+  });
+}
+
+  isGuideSelected(guideId: string): boolean {
+    const currentList = this.userForm.get('invitedGuideIds')?.value;
+    // Ensure currentList is an array before using includes
+    return Array.isArray(currentList) && currentList.includes(guideId);
+  }
+
+toggleGuide(guideId: string, event: any) {
+  const isChecked = event.target.checked;
+  let currentList = this.userForm.get('invitedGuideIds')?.value;
+  
+  // Ensure currentList is an array
+  if (!Array.isArray(currentList)) {
+    currentList = [];
+  }
+  
+  const updatedList = [...currentList];
+
+  if (isChecked) {
+    if (!updatedList.includes(guideId)) {
+      updatedList.push(guideId);
+      console.log(`✅ Added guide ${guideId} to selection`);
+    }
+  } else {
+    const idx = updatedList.indexOf(guideId);
+    if (idx > -1) {
+      updatedList.splice(idx, 1);
+      console.log(`❌ Removed guide ${guideId} from selection`);
+    }
+  }
+
+  this.userForm.patchValue({ invitedGuideIds: updatedList });
+  console.log('📋 Updated invitedGuideIds:', updatedList);
+  this.userForm.get('invitedGuideIds')?.markAsDirty();
+}
+
+onSubmit() {
+  if (this.userForm.invalid) {
+    Object.keys(this.userForm.controls).forEach(key => {
+      this.userForm.get(key)?.markAsTouched();
+    });
+    return;
+  }
+
+  this.isSubmitting = true;
+  const formValue = this.userForm.getRawValue();
+
+  if (this.isEditMode && this.userId) {
+    // UPDATE MODE
+    const updateData: Partial<User> = {
+      name: formValue.name,
+      email: formValue.email,
+      role: formValue.role
+    };
+
+    const newPassword = formValue.password && formValue.password.trim() !== ''
+      ? formValue.password
+      : undefined;
+
+    // Ensure invitedGuideIds is an array and convert string guide IDs to numbers
+    const invitedIds = Array.isArray(formValue.invitedGuideIds) ? formValue.invitedGuideIds : [];
+    const guideIds = formValue.role !== 'admin' 
+      ? invitedIds.map((id: string) => parseInt(id, 10)).filter((id: number) => !isNaN(id))
+      : [];
+
+    console.log('Updating user with data:', { updateData, guideIds, hasPassword: !!newPassword });
+
+    this.userService.updateUser(this.userId, updateData, newPassword, guideIds).subscribe({
+      next: (updatedUser) => {
+        console.log('User updated successfully:', updatedUser);
+        this.isSubmitting = false;
+        this.toast.showSuccess('User updated successfully!', 'Update Complete');
+        this.userService.refreshUsers();
+        this.router.navigate(['/dashboard/users']);
       },
       error: (error) => {
-        console.error('Failed to load user with invites:', error);
-        this.isLoading = false;
+        console.error('Failed to update user:', error);
+        this.isSubmitting = false;
+        // Don't show error if update was actually successful
+        if (error.message && error.message.includes('User updated successfully')) {
+          this.toast.showSuccess('User updated successfully!', 'Update Complete');
+          this.router.navigate(['/dashboard/users']);
+        } else {
+          this.toast.showError(`Failed to update user: ${error.message || 'Please try again.'}`, 'Update Failed');
+        }
+      }
+    });
+  } else {
+    // CREATE MODE
+    const invitedIds = Array.isArray(formValue.invitedGuideIds) ? formValue.invitedGuideIds : [];
+    const guideIds = formValue.role !== 'admin'
+      ? invitedIds.map((id: string) => parseInt(id, 10)).filter((id: number) => !isNaN(id))
+      : [];
 
-        // Fallback: Try to load just basic user info
-        this.userService.getUserByIdFromApi(id).subscribe({
-          next: (user) => {
-            this.userForm.patchValue({
-              name: user.name,
-              email: user.email,
-              role: user.role,
-              invitedGuideIds: []
-            });
-            this.userForm.get('password')?.clearValidators();
-            if (user.role === 'admin') {
-              this.userForm.get('role')?.disable();
-            }
-          },
-          error: () => {
-            this.router.navigate(['/dashboard/users']);
-          }
-        });
+    const userData = {
+      email: formValue.email,
+      password: formValue.password,
+      role: formValue.role === 'admin' ? 'Admin' : 'User',
+      guideIds: guideIds
+    };
+
+    console.log('Creating new user with data:', userData);
+
+    this.userService.addUser(userData).subscribe({
+      next: (response: any) => {
+        console.log('User created successfully:', response);
+        this.isSubmitting = false;
+        this.toast.showSuccess('User created successfully!', 'Creation Complete');
+        this.userService.refreshUsers();
+        this.router.navigate(['/dashboard/users']);
+      },
+      error: (error) => {
+        console.error('Failed to create user:', error);
+        this.isSubmitting = false;
+        this.toast.showError(`Failed to create user: ${error.error?.message || error.message}`, 'Creation Failed');
       }
     });
   }
-
-  isGuideSelected(guideId: string): boolean {
-    const currentList = this.userForm.get('invitedGuideIds')?.value || [];
-    return currentList.includes(guideId);
-  }
-
-  toggleGuide(guideId: string, event: any) {
-    const isChecked = event.target.checked;
-    const currentList: string[] = [...(this.userForm.get('invitedGuideIds')?.value || [])];
-
-    if (isChecked) {
-      if (!currentList.includes(guideId)) {
-        currentList.push(guideId);
-      }
-    } else {
-      const idx = currentList.indexOf(guideId);
-      if (idx > -1) currentList.splice(idx, 1);
-    }
-
-    this.userForm.patchValue({ invitedGuideIds: currentList });
-    this.userForm.get('invitedGuideIds')?.markAsDirty();
-  }
-  onSubmit() {
-    if (this.userForm.invalid) {
-      // Mark all fields as touched to show validation errors
-      Object.keys(this.userForm.controls).forEach(key => {
-        this.userForm.get(key)?.markAsTouched();
-      });
-      return;
-    }
-
-    const formValue = this.userForm.getRawValue();
-
-    if (this.isEditMode && this.userId) {
-      // UPDATE MODE - Step 1: Update user basic info
-      const updateData: Partial<User> = {
-        name: formValue.name,
-        email: formValue.email,
-        role: formValue.role
-      };
-
-      const newPassword = formValue.password && formValue.password.trim() !== ''
-        ? formValue.password
-        : undefined;
-
-      console.log('Step 1: Updating user basic info...', updateData);
-
-      console.log('=== PASSWORD CHECK ===');
-console.log('formValue.password:', formValue.password);
-console.log('newPassword:', newPassword ? 'Has password (not empty)' : 'No password or empty');
-
-
-      // Update user basic info (name, email, role, password)
-      this.userService.updateUser(this.userId, updateData, newPassword).subscribe({
-        next: (updatedUser) => {
-          console.log('User basic info updated successfully:', updatedUser);
-          this.toast.showSuccess('User updated successfully!', 'Update Complete');
-
-          // Step 2: Update guide invitations (THIS IS WHAT WAS MISSING!)
-          const invitedGuideIds = formValue.invitedGuideIds || [];
-
-          console.log('Step 2: Updating guide invitations for user:', this.userId);
-          console.log('Guide IDs to save:', invitedGuideIds);
-
-          // Only update invitations if user is not admin
-          if (formValue.role !== 'admin') {
-            // CALL THE FUNCTION THAT SAVES GUIDE INVITATIONS TO DATABASE
-            this.userService.updateUserGuideInvitations(this.userId!, invitedGuideIds).subscribe({
-              next: (result) => {
-                console.log('Guide invitations saved successfully to GuideUsers table!', result);
-                this.userService.refreshUsers();
-                this.router.navigate(['/dashboard/users']);
-              },
-              error: (error) => {
-                console.error('Failed to update guide invitations:', error);
-                this.toast.showWarning('User updated but guide invitations failed to save. Check console for details.', 'Partial Success');
-                this.userService.refreshUsers();
-                this.router.navigate(['/dashboard/users']);
-              }
-            });
-          } else {
-            // Admin users - clear any guide invitations
-            console.log('Admin user - clearing guide invitations');
-            this.userService.updateUserGuideInvitations(this.userId!, []).subscribe({
-              next: () => {
-                console.log('Cleared guide invitations for admin');
-                this.userService.refreshUsers();
-                this.router.navigate(['/dashboard/users']);
-              },
-              error: () => {
-                this.userService.refreshUsers();
-                this.router.navigate(['/dashboard/users']);
-              }
-            });
-          }
-        },
-        error: (error) => {
-          console.error('Failed to update user:', error);
-          this.toast.showError(`Failed to update user: ${error.message || 'Please try again.'}`, 'Update Failed');
-        }
-      });
-    } else {
-      // CREATE MODE
-      const userData = {
-        email: formValue.email,
-        password: formValue.password,
-        role: formValue.role === 'admin' ? 'Admin' : 'User'
-      };
-
-      console.log('Creating new user:', userData);
-
-
-
-this.userService.addUser(userData).subscribe({
-  next: (response: any) => {
-    console.log('User created successfully:', response);
-    this.toast.showSuccess('User created successfully!', 'Creation Complete');
-    const newUserId = response.data?.userId || response.userId;
-    
-    // Save guide invitations AFTER user exists
-    if (formValue.role !== 'admin' && formValue.invitedGuideIds?.length > 0 && newUserId) {
-      console.log('Saving guide invitations for new user:', formValue.invitedGuideIds);
-      this.userService.updateUserGuideInvitations(newUserId, formValue.invitedGuideIds).subscribe({
-        next: () => {
-          console.log('Guide invitations saved successfully');
-          this.userService.refreshUsers();
-          this.router.navigate(['/dashboard/users']);
-        },
-        error: (error) => {
-          console.error('Failed to save guide invitations:', error);
-          this.toast.showWarning('User created but failed to save guide invitations.', 'Partial Success');
-          this.userService.refreshUsers();
-          this.router.navigate(['/dashboard/users']);
-        }
-      });
-    } else {
-      this.userService.refreshUsers();
-      this.router.navigate(['/dashboard/users']);
-    }
-  },
-  error: (error) => {
-    console.error('Failed to create user:', error);
-    this.toast.showError('Failed to create user. ' + (error.error?.message || error.message), 'Creation Failed');
-  }
-});
-    }
-  }
- }
-
+}
+}

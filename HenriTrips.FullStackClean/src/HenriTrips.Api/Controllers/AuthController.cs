@@ -1,9 +1,11 @@
 ﻿using HenriTrips.Application.Common;
 using HenriTrips.Application.DTOs.Auth;
 using HenriTrips.Application.Interfaces;
+using HenriTrips.Application.UseCases.Auth.Users;
+using HenriTrips.Application.UseCases.Guides;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;  // ADD THIS using statement
 
 namespace HenriTrips.Api.Controllers;
 
@@ -12,13 +14,29 @@ namespace HenriTrips.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly GetAllUsers _getAllUsers;
+    private readonly GetUserById _getUserById;
+    private readonly CreateUser _createUser;
+    private readonly UpdateUser _updateUser;
+    private readonly DeleteUser _deleteUser;
 
-    public AuthController(IAuthService authService, UserManager<IdentityUser> userManager)
+    public AuthController(
+        IAuthService authService,
+        GetAllUsers getAllUsers,
+        GetUserById getUserById,
+        CreateUser createUser,
+        UpdateUser updateUser,
+        DeleteUser deleteUser)
     {
         _authService = authService;
-        _userManager = userManager;
+        _getAllUsers = getAllUsers;
+        _getUserById = getUserById;
+        _createUser = createUser;
+        _updateUser = updateUser;
+        _deleteUser = deleteUser;
     }
+
+    // ================= AUTH =================
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
@@ -39,13 +57,11 @@ public class AuthController : ControllerBase
         var result = await _authService.RegisterAsync(dto.Email, dto.Password);
 
         if (!result)
-        {
             return BadRequest(new ApiResponse<object>
             {
                 Success = false,
                 Message = "Registration failed"
             });
-        }
 
         return Ok(new ApiResponse<object>
         {
@@ -54,32 +70,18 @@ public class AuthController : ControllerBase
         });
     }
 
-    // ========== ADMIN USER MANAGEMENT ==========
+    // ================= USER MANAGEMENT =================
 
     [Authorize(Roles = "Admin")]
     [HttpGet("users")]
     public async Task<IActionResult> GetAllUsers()
     {
-        var users = _userManager.Users.ToList();
-        var result = new List<UserResponseDto>();
+        var users = await _getAllUsers.ExecuteAsync();
 
-        foreach (var user in users)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-
-            result.Add(new UserResponseDto
-            {
-                Id = user.Id,
-                Email = user.Email ?? string.Empty,
-                UserName = user.UserName ?? string.Empty,
-                Roles = roles.ToList()
-            });
-        }
-
-        return Ok(new ApiResponse<List<UserResponseDto>>
+        return Ok(new ApiResponse<object>
         {
             Success = true,
-            Data = result
+            Data = users
         });
     }
 
@@ -87,31 +89,19 @@ public class AuthController : ControllerBase
     [HttpGet("users/{userId}")]
     public async Task<IActionResult> GetUserById(string userId)
     {
-        var user = await _userManager.FindByIdAsync(userId);
+        var user = await _getUserById.ExecuteAsync(userId);
 
         if (user == null)
-        {
             return NotFound(new ApiResponse<object>
             {
                 Success = false,
                 Message = "User not found"
             });
-        }
 
-        var roles = await _userManager.GetRolesAsync(user);
-
-        var userDto = new UserResponseDto
-        {
-            Id = user.Id,
-            Email = user.Email ?? string.Empty,
-            UserName = user.UserName ?? string.Empty,
-            Roles = roles.ToList()
-        };
-
-        return Ok(new ApiResponse<UserResponseDto>
+        return Ok(new ApiResponse<object>
         {
             Success = true,
-            Data = userDto
+            Data = user
         });
     }
 
@@ -119,29 +109,19 @@ public class AuthController : ControllerBase
     [HttpPost("create-user")]
     public async Task<IActionResult> CreateUser(CreateUserDto dto)
     {
-        var user = new IdentityUser
-        {
-            UserName = dto.Email,
-            Email = dto.Email
-        };
+        var result = await _createUser.ExecuteAsync(dto);
 
-        var result = await _userManager.CreateAsync(user, dto.Password);
-
-        if (!result.Succeeded)
-        {
+        if (!result.Success)
             return BadRequest(new ApiResponse<object>
             {
                 Success = false,
-                Message = string.Join(", ", result.Errors.Select(e => e.Description))
+                Message = result.Error
             });
-        }
-
-        await _userManager.AddToRoleAsync(user, dto.Role);
 
         return Ok(new ApiResponse<object>
         {
             Success = true,
-            Data = new { user.Id },
+            Data = new { UserId = result.UserId },
             Message = "User created successfully"
         });
     }
@@ -150,73 +130,18 @@ public class AuthController : ControllerBase
     [HttpPut("users/{userId}")]
     public async Task<IActionResult> UpdateUser(string userId, UpdateUserDto dto)
     {
-        var user = await _userManager.FindByIdAsync(userId);
+        var result = await _updateUser.ExecuteAsync(userId, dto);
 
-        if (user == null)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "User not found"
-            });
-        }
-
-        // Update Email
-        if (!string.IsNullOrEmpty(dto.Email) && dto.Email != user.Email)
-        {
-            user.Email = dto.Email;
-            user.UserName = dto.Email;
-        }
-
-        // Update Role
-        if (!string.IsNullOrEmpty(dto.Role))
-        {
-            var currentRoles = await _userManager.GetRolesAsync(user);
-            await _userManager.RemoveFromRolesAsync(user, currentRoles);
-            await _userManager.AddToRoleAsync(user, dto.Role);
-        }
-
-        // Update Password (SECURE FIX)
-        if (!string.IsNullOrEmpty(dto.Password))
-        {
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var passResult = await _userManager.ResetPasswordAsync(user, token, dto.Password);
-
-            if (!passResult.Succeeded)
-            {
-                return BadRequest(new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = string.Join(", ", passResult.Errors.Select(e => e.Description))
-                });
-            }
-        }
-
-        var updateResult = await _userManager.UpdateAsync(user);
-
-        if (!updateResult.Succeeded)
-        {
+        if (!result.Success)
             return BadRequest(new ApiResponse<object>
             {
                 Success = false,
-                Message = string.Join(", ", updateResult.Errors.Select(e => e.Description))
+                Message = result.Error
             });
-        }
 
-        var updatedRoles = await _userManager.GetRolesAsync(user);
-
-        var userDto = new UserResponseDto
-        {
-            Id = user.Id,
-            Email = user.Email ?? string.Empty,
-            UserName = user.UserName ?? string.Empty,
-            Roles = updatedRoles.ToList()
-        };
-
-        return Ok(new ApiResponse<UserResponseDto>
+        return Ok(new ApiResponse<object>
         {
             Success = true,
-            Data = userDto,
             Message = "User updated successfully"
         });
     }
@@ -225,32 +150,85 @@ public class AuthController : ControllerBase
     [HttpDelete("delete-user/{userId}")]
     public async Task<IActionResult> DeleteUser(string userId)
     {
-        var user = await _userManager.FindByIdAsync(userId);
+        var result = await _deleteUser.ExecuteAsync(userId);
 
-        if (user == null)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "User not found"
-            });
-        }
-
-        var result = await _userManager.DeleteAsync(user);
-
-        if (!result.Succeeded)
-        {
+        if (!result.Success)
             return BadRequest(new ApiResponse<object>
             {
                 Success = false,
-                Message = string.Join(", ", result.Errors.Select(e => e.Description))
+                Message = result.Error
             });
-        }
 
         return Ok(new ApiResponse<object>
         {
             Success = true,
             Message = "User deleted successfully"
+        });
+    }
+
+    // ================= USER GUIDE INVITATIONS =================
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("users/{userId}/guides")]
+    public async Task<IActionResult> GetUserGuides(
+        string userId,
+        [FromServices] GetUserInvitedGuides getUserInvitedGuides)
+    {
+        var guideIds = await getUserInvitedGuides.ExecuteAsync(userId);
+
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Data = guideIds
+        });
+    }
+
+    // FIXED: Allow users to access their OWN invited guides (not just admin)
+    [Authorize]  // Changed from [Authorize(Roles = "Admin")] to just [Authorize]
+    [HttpGet("users/{userId}/invited-guides")]
+    public async Task<IActionResult> GetUserInvitedGuidesCompatibility(
+        string userId,
+        [FromServices] GetUserInvitedGuides getUserInvitedGuides)
+    {
+        // Security: Users can only see their own guides
+        var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isAdmin = User.IsInRole("Admin");
+
+        // Allow if user is admin OR the user is accessing their own data
+        if (!isAdmin && currentUserId != userId)
+        {
+            return Forbid(); // User trying to access another user's data
+        }
+
+        var guideIds = await getUserInvitedGuides.ExecuteAsync(userId);
+
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Data = guideIds
+        });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("users/{userId}/guides/{guideId}")]
+    public async Task<IActionResult> RemoveUserGuide(
+        string userId,
+        int guideId,
+        [FromServices] RemoveUserFromGuide removeUserFromGuide)
+    {
+        var result = await removeUserFromGuide.ExecuteAsync(guideId, userId);
+
+        if (!result)
+            return NotFound(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Guide not found for this user"
+            });
+
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Guide removed from user successfully"
         });
     }
 }

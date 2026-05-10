@@ -5,7 +5,8 @@ COPY . .
 WORKDIR /src/src/HenriTrips.Api
 
 RUN dotnet restore
-RUN dotnet publish -c Release -o /app/out
+#RUN dotnet publish -c Release -o /app/out		#release code
+RUN dotnet publish -c Debug -o /app/out			#debug code
 
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
