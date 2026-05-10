@@ -69,6 +69,16 @@ screenshots                -> UI previews
 ```
 
 ---
+📁 Architecture Notes
+
+This repository contains multiple backend iterations:
+
+HenriTrips.Api → Initial implementation (legacy API structure)
+HenriTrips.Api.Legacy → Deprecated version (not used, kept for historical reference)
+HenriTrips.FullStackClean → Current production-ready backend using Clean Architecture principles
+HenriTrips.FrontEnd → Angular 18 frontend application
+
+👉 Only HenriTrips.FullStackClean + FrontEnd are actively maintained.
 
 # 🚀 Getting Started (2 Options)
 
