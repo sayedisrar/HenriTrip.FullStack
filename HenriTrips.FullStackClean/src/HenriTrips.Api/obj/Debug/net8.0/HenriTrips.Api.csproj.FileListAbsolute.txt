@@ -162,7 +162,6 @@ C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\staticwebassets.development.json
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\swae.build.ex.cache
-C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\HenriTri.F9FDB8A4.Up2Date
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\HenriTrips.Api.dll
 C:\Projects\HenriTripFullStack\HenriTrip.FullStack\HenriTrips.FullStackClean\src\HenriTrips.Api\obj\Debug\net8.0\refint\HenriTrips.Api.dll

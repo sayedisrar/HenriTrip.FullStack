@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HenriTrips.IntegrationTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a5476fa159c0c9be631da3659c97a3791c6795aa")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+70f678271f542f7fe13912e326213e7127f11377")]
 [assembly: System.Reflection.AssemblyProductAttribute("HenriTrips.IntegrationTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HenriTrips.IntegrationTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
