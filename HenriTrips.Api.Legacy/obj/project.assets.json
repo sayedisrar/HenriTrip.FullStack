@@ -3658,11 +3658,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api\\HenriTrips.Api.Legacy.csproj",
+      "projectUniqueName": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api.Legacy\\HenriTrips.Api.Legacy.csproj",
       "projectName": "HenriTrips.Api.Legacy",
-      "projectPath": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api\\HenriTrips.Api.Legacy.csproj",
+      "projectPath": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api.Legacy\\HenriTrips.Api.Legacy.csproj",
       "packagesPath": "C:\\Users\\sayed\\.nuget\\packages\\",
-      "outputPath": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api\\obj\\",
+      "outputPath": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api.Legacy\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

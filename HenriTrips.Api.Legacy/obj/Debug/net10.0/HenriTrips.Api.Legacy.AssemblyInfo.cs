@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HenriTrips.Api.Legacy")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c98ee2847a7bb35ec0838b0895f96e5771d781f0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+49b942bc1ab37c37b61c2a4a070ca2919288c1fd")]
 [assembly: System.Reflection.AssemblyProductAttribute("HenriTrips.Api.Legacy")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HenriTrips.Api.Legacy")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
