@@ -40,7 +40,6 @@ The platform allows administrators to manage travel guides, activities, users, a
 # 🛠 Tech Stack
 
 ## Frontend
-
 - Angular 18
 - TypeScript
 - RxJS
@@ -48,10 +47,7 @@ The platform allows administrators to manage travel guides, activities, users, a
 - Angular Routing
 - Standalone Components
 
----
-
 ## Backend
-
 - ASP.NET Core 8 Web API
 - Clean Architecture
 - Entity Framework Core
@@ -74,23 +70,71 @@ screenshots                -> UI previews
 
 ---
 
-# 📦 Project Structure
+# 🚀 Getting Started (2 Options)
+
+## Option 1 — Docker (Recommended - Fastest Setup)
+
+Run the full system with one command:
+
+```bash
+docker compose up --build
+```
+
+Then:
+
+- Frontend: http://localhost:4200  
+- Backend API: http://localhost:5000  
+- Swagger: http://localhost:5000/swagger  
+
+✔ No manual setup required  
+✔ Database is automatically handled by Docker  
+✔ Best for quick evaluation
+
+---
+
+## Option 2 — Manual Setup (Development Mode)
+
+### Backend
+
+```bash
+cd HenriTrips.FullStackClean
+dotnet restore
+dotnet build
+dotnet run --project src/HenriTrips.Api
+```
+
+### Frontend
+
+```bash
+cd HenriTrips.FrontEnd
+npm install
+ng serve
+```
+
+Then open:
 
 ```text
-HenriTrips
-│
-├── HenriTrips.FrontEnd
-│
-├── HenriTrips.FullStackClean
-│   ├── HenriTrips.Api
-│   ├── HenriTrips.Application
-│   ├── HenriTrips.Domain
-│   └── HenriTrips.Infrastructure
-│
-├── database
-├── docs
-└── screenshots
+http://localhost:4200
 ```
+
+---
+
+## Database Setup (Required for Manual Mode)
+
+The repository contains a `database` folder including:
+
+- `HenriTrips.sql`
+- `HenriTrips.bak`
+
+### Option A — SQL Script (Recommended)
+
+1. Open SQL Server Management Studio (SSMS)
+2. Run `HenriTrips.sql`
+
+### Option B — Restore Backup
+
+1. Open SSMS
+2. Restore `HenriTrips.bak`
 
 ---
 
@@ -103,154 +147,44 @@ HenriTrips
 - Protected API endpoints
 - Admin/User roles
 
----
-
 ## Guide Management
 
 - Create guides
 - Update guides
 - Delete guides
 - Invite users to guides
-- View personalized guide access
-
----
+- View personalized access
 
 ## Activity Management
 
 - Create activities
 - Multi-day itinerary support
 - Categories and scheduling
-- Address and contact management
-
----
-
-# 🐳 Docker Support
-
-The application includes full Docker support.
-
-## Environment Variables
-
-`.env`
-
-```env
-DB_PASSWORD=YourStrongPassword
-JWT_SECRET=YourVeryStrongJwtSecretKey
-DB_NAME=HenriTrips
-```
-
----
-
-## Run Entire Project
-
-```bash
-docker compose up --build
-```
+- Address and contact details
 
 ---
 
 # 🌐 Application Access
 
-## Frontend
-
-```text
-http://localhost:4200
-```
-
-## Backend API
-
-```text
-http://localhost:5000
-```
-
-## Swagger
-
-```text
-http://localhost:5000/swagger
-```
-
-## Health Check
-
-```text
-http://localhost:5000/health
-```
-
----
-
-# 🗄 Database
-
-The repository contains a `database` directory including:
-
-- `HenriTrips.sql`
-- `HenriTrips.bak`
-
----
-
-## Database Setup
-
-### Option 1 — SQL Script
-
-1. Open SQL Server Management Studio (SSMS)
-2. Execute `HenriTrips.sql`
-
----
-
-### Option 2 — Restore Backup
-
-1. Open SSMS
-2. Restore `HenriTrips.bak`
+- Frontend: http://localhost:4200  
+- Backend: http://localhost:5000  
+- Swagger: http://localhost:5000/swagger  
+- Health: http://localhost:5000/health  
 
 ---
 
 # 👥 Default Test Users
 
 | Email | Password | Role |
-|---|---|---|
+|------|----------|------|
 | admin@henritrips.com | Admin@12345! | Admin |
 | user@henritrips.com | User@12345! | User |
 
 ---
 
-# 🔧 Local Development
-
-## Frontend
-
-```bash
-cd HenriTrips.FrontEnd
-npm install
-ng serve
-```
-
----
-
-## Backend
-
-```bash
-cd HenriTrips.FullStackClean
-dotnet restore
-dotnet build
-dotnet run --project src/HenriTrips.Api
-```
-
----
-
-# ✅ Implemented Engineering Practices
-
-- Clean Architecture
-- Layered project structure
-- DTO separation
-- Use Case pattern
-- Dependency Injection
-- JWT Security
-- Dockerized deployment
-- Environment-based configuration
-- Health checks
-- Swagger documentation
-
----
-
 # 📸 Screenshots
 
-UI previews are available inside:
+Available in:
 
 ```text
 /screenshots
