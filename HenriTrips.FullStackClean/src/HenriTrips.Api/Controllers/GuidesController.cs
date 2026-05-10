@@ -1,5 +1,6 @@
 ﻿using HenriTrips.Application.Common;
 using HenriTrips.Application.DTOs.Guide;
+using HenriTrips.Application.Interfaces;
 using HenriTrips.Application.UseCases.Activities;
 using HenriTrips.Application.UseCases.Guides;
 using Microsoft.AspNetCore.Authorization;
@@ -39,33 +40,16 @@ public class GuidesController : ControllerBase
     public async Task<IActionResult> GetGuides()
     {
         var guides = await _getGuides.ExecuteAsync();
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Data = guides
-        });
+        return Ok(new ApiResponse<object> { Success = true, Data = guides });
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _getGuideById.ExecuteAsync(id);
-
         if (result == null)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Guide not found"
-            });
-        }
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Data = result
-        });
+            return NotFound(new ApiResponse<object> { Success = false, Message = "Guide not found" });
+        return Ok(new ApiResponse<object> { Success = true, Data = result });
     }
 
     [Authorize(Roles = "Admin")]
@@ -83,13 +67,7 @@ public class GuidesController : ControllerBase
         }
 
         var id = await _createGuide.ExecuteAsync(dto);
-
-        return Ok(new ApiResponse<int>
-        {
-            Success = true,
-            Data = id,
-            Message = "Guide created successfully"
-        });
+        return Ok(new ApiResponse<int> { Success = true, Data = id, Message = "Guide created successfully" });
     }
 
     [Authorize(Roles = "Admin")]
@@ -97,21 +75,9 @@ public class GuidesController : ControllerBase
     public async Task<IActionResult> Update(int id, GuideUpdateDto dto)
     {
         var ok = await _updateGuide.ExecuteAsync(id, dto);
-
         if (!ok)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Guide not found"
-            });
-        }
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Message = "Guide updated successfully"
-        });
+            return NotFound(new ApiResponse<object> { Success = false, Message = "Guide not found" });
+        return Ok(new ApiResponse<object> { Success = true, Message = "Guide updated successfully" });
     }
 
     [Authorize(Roles = "Admin")]
@@ -119,21 +85,9 @@ public class GuidesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var ok = await _deleteGuide.ExecuteAsync(id);
-
         if (!ok)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Guide not found"
-            });
-        }
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Message = "Guide deleted successfully"
-        });
+            return NotFound(new ApiResponse<object> { Success = false, Message = "Guide not found" });
+        return Ok(new ApiResponse<object> { Success = true, Message = "Guide deleted successfully" });
     }
 
     [Authorize(Roles = "Admin")]
@@ -141,68 +95,23 @@ public class GuidesController : ControllerBase
     public async Task<IActionResult> Invite(int guideId, string userId)
     {
         await _inviteUser.ExecuteAsync(guideId, userId);
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Message = "User invited successfully"
-        });
-    }
-
-    // ========== NEW PERMISSION ENDPOINTS ==========
-
-    [Authorize(Roles = "Admin")]
-    [HttpGet("user/{userId}/invited-guides")]
-    public async Task<IActionResult> GetUserInvitedGuides(
-        string userId,
-        [FromServices] GetUserInvitedGuides getUserInvitedGuides)
-    {
-        var guideIds = await getUserInvitedGuides.ExecuteAsync(userId);
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Data = guideIds
-        });
+        return Ok(new ApiResponse<object> { Success = true, Message = "User invited successfully" });
     }
 
     [Authorize(Roles = "Admin")]
     [HttpDelete("{guideId}/remove-user/{userId}")]
-    public async Task<IActionResult> RemoveUserFromGuide(
-        int guideId,
-        string userId,
-        [FromServices] RemoveUserFromGuide removeUserFromGuide)
+    public async Task<IActionResult> RemoveUserFromGuide(int guideId, string userId, [FromServices] RemoveUserFromGuide removeUserFromGuide)
     {
         var result = await removeUserFromGuide.ExecuteAsync(guideId, userId);
-
         if (!result)
-        {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "User not found in this guide"
-            });
-        }
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Message = "User removed from guide successfully"
-        });
+            return NotFound(new ApiResponse<object> { Success = false, Message = "User not found in this guide" });
+        return Ok(new ApiResponse<object> { Success = true, Message = "User removed from guide successfully" });
     }
 
-    // Compatibility endpoint for frontend
     [HttpGet("{guideId}/activities")]
-    public async Task<IActionResult> GetActivitiesByGuideIdCompatibility(
-        int guideId,
-        [FromServices] GetActivitiesByGuideId getActivitiesByGuideId)
+    public async Task<IActionResult> GetActivitiesByGuideId(int guideId, [FromServices] GetActivitiesByGuideId getActivitiesByGuideId)
     {
         var result = await getActivitiesByGuideId.ExecuteAsync(guideId);
-
-        return Ok(new ApiResponse<object>
-        {
-            Success = true,
-            Data = result
-        });
+        return Ok(new ApiResponse<object> { Success = true, Data = result });
     }
 }

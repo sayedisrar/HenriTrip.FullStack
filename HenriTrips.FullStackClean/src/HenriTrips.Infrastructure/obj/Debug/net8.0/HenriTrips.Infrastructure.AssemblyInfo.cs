@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HenriTrips.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a5476fa159c0c9be631da3659c97a3791c6795aa")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+96259408c1defd6e330f5fe8474b298f9661fbbc")]
 [assembly: System.Reflection.AssemblyProductAttribute("HenriTrips.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HenriTrips.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -21,22 +21,45 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   let clonedReq = req;
 
+  // Debug logging
+  console.log('🔵 INTERCEPTOR - Request URL:', req.url);
+  console.log('🔵 INTERCEPTOR - Skip Auth:', skipAuth);
+  console.log('🔵 INTERCEPTOR - Is Auth Endpoint:', isAuthEndpoint);
+
   if (!skipAuth && !isAuthEndpoint) {
     const token = authService.getToken();
+    console.log('🔵 INTERCEPTOR - Token exists:', !!token);
     
-    if (token && !authService.isTokenExpired(token)) {
-      clonedReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+    if (token) {
+      const isExpired = authService.isTokenExpired(token);
+      console.log('🔵 INTERCEPTOR - Token expired:', isExpired);
+      
+      if (!isExpired) {
+        clonedReq = req.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log('✅ INTERCEPTOR - Added Authorization header');
+      } else {
+        console.warn('⚠️ INTERCEPTOR - Token expired, not adding header');
+      }
+    } else {
+      console.warn('⚠️ INTERCEPTOR - No token found');
     }
+  } else {
+    console.log('🔵 INTERCEPTOR - Skipping token for this request');
   }
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
+      console.error('🔴 INTERCEPTOR - Error caught:', error.status, error.statusText);
+      console.error('🔴 INTERCEPTOR - Error URL:', error.url);
+      console.error('🔴 INTERCEPTOR - Error message:', error.message);
+      
       if (error.status === 401) {
+        console.warn('⚠️ INTERCEPTOR - 401 Unauthorized, logging out');
         authService.logout();
         router.navigate(['/login'], {
           queryParams: {
