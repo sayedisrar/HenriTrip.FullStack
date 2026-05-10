@@ -1,81 +1,263 @@
-# ✈️ HenriTrips - Travel Guide Platform
+# ✈️ HenriTrips - Full Stack Travel Guide Platform
 
 [![Angular](https://img.shields.io/badge/Angular-18-red.svg)](https://angular.io/)
 [![.NET](https://img.shields.io/badge/.NET-8.0-purple.svg)](https://dotnet.microsoft.com/)
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-blue.svg)](https://www.microsoft.com/sql-server)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)](https://www.docker.com/)
+[![Clean Architecture](https://img.shields.io/badge/Architecture-Clean-success.svg)]()
 
-A full-stack travel guide management platform that allows administrators to create and manage travel itineraries, while providing users with personalized guide access.
+HenriTrips is a full-stack travel itinerary and guide management platform built with Angular and ASP.NET Core 8 following Clean Architecture principles.
 
-## 🚀 Features
+The platform allows administrators to manage travel guides, activities, users, and permissions while providing end users with personalized travel experiences and itinerary access.
 
-### 👑 Admin Features
-- **Guide Management** - Create, edit, delete travel guides
-- **Activity Management** - Add activities with categories, addresses, phone, hours, website
-- **User Management** - Create, edit, delete users, assign roles
-- **Guide Access Control** - Invite specific users to access specific guides
-- **Day-by-Day Itinerary** - Organize activities across multiple days
+---
 
-### 👤 User Features
-- **Personalized Dashboard** - See only guides you're invited to
-- **Detailed Itineraries** - View day-by-day activities with all details
-- **Rich Activity Cards** - Address, phone, hours, website, category icons
-- **Responsive Design** - Works on desktop, tablet, and mobile
+# 🚀 Features
 
-## 🛠 Tech Stack
+## 👑 Admin Features
 
-### Frontend
+- Guide management (Create / Update / Delete)
+- Activity management with categories and scheduling
+- User management and role assignment
+- Guide invitation and permission system
+- Day-by-day itinerary organization
+- JWT-secured administration
+- Swagger API documentation
+
+---
+
+## 👤 User Features
+
+- Personalized dashboard
+- Access only to invited guides
+- Detailed itinerary visualization
+- Rich activity cards
+- Responsive design
+- Mobile-friendly interface
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
 - Angular 18
 - TypeScript
 - RxJS
-- Reactive Forms
-- PWA Support
+- Angular Reactive Forms
+- Angular Routing
+- Standalone Components
 
-### Backend
-- .NET 8
-- ASP.NET Core Identity
+---
+
+## Backend
+
+- ASP.NET Core 8 Web API
+- Clean Architecture
 - Entity Framework Core
+- ASP.NET Identity
 - SQL Server
 - JWT Authentication
+- Docker
 
-## 📦 Prerequisites
+---
 
-- Node.js 18+
-- Angular CLI: `npm install -g @angular/cli`
-- .NET SDK 8.0
-- SQL Server
+# 🏗 Architecture
 
-## Database
+```text
+HenriTrips.FrontEnd        -> Angular frontend application
+HenriTrips.FullStackClean  -> ASP.NET Core Clean Architecture backend
+database                   -> SQL scripts and backup
+docs                       -> Project documentation
+screenshots                -> UI previews
+```
 
-The solution includes a **`database`** directory containing the following files:
+---
 
-- `HenriTrips.sql` – SQL script to create and populate the database.  
-- `HenriTrips.bak` – SQL Server backup file of the database.
+# 📦 Project Structure
 
-### Setup Instructions
+```text
+HenriTrips
+│
+├── HenriTrips.FrontEnd
+│
+├── HenriTrips.FullStackClean
+│   ├── HenriTrips.Api
+│   ├── HenriTrips.Application
+│   ├── HenriTrips.Domain
+│   └── HenriTrips.Infrastructure
+│
+├── database
+├── docs
+└── screenshots
+```
 
-#### Option 1: Using the SQL Script (Recommended)
-1. Open **SQL Server Management Studio (SSMS)** or any SQL client.  
-2. Run `HenriTrips.sql` to create the database and populate its tables.  
+---
 
-#### Option 2: Using the Backup File (`.bak`)
-1. Open **SSMS**.  
-2. Restore the database using `HenriTrips.bak`.  
-3. The database will include all tables and data as in the backup.
+# 🔐 Main Features Implemented
 
-### Default Users
-The database comes with **predefined users** for testing:
+## Authentication & Authorization
 
-| Email             | Password     | Role           |
-|------------------|-------------|----------------|
-| Admin@gmail.com   | Admin@123   | Administrator  |
-| User@gmail.com    | User@123    | Standard User  |
+- JWT authentication
+- Role-based authorization
+- Protected API endpoints
+- Admin/User roles
 
-> Both setup methods (`.sql` or `.bak`) include these default users so you can log in immediately and test the application.
+---
 
-## 🔧 Installation
+## Guide Management
 
-### 1. Clone the Repository
+- Create guides
+- Update guides
+- Delete guides
+- Invite users to guides
+- View personalized guide access
+
+---
+
+## Activity Management
+
+- Create activities
+- Multi-day itinerary support
+- Categories and scheduling
+- Address and contact management
+
+---
+
+# 🐳 Docker Support
+
+The application includes full Docker support.
+
+## Environment Variables
+
+`.env`
+
+```env
+DB_PASSWORD=YourStrongPassword
+JWT_SECRET=YourVeryStrongJwtSecretKey
+DB_NAME=HenriTrips
+```
+
+---
+
+## Run Entire Project
 
 ```bash
-git clone https://github.com/yourusername/HenriTrips.git
-cd HenriTrips
+docker compose up --build
+```
+
+---
+
+# 🌐 Application Access
+
+## Frontend
+
+```text
+http://localhost:4200
+```
+
+## Backend API
+
+```text
+http://localhost:5000
+```
+
+## Swagger
+
+```text
+http://localhost:5000/swagger
+```
+
+## Health Check
+
+```text
+http://localhost:5000/health
+```
+
+---
+
+# 🗄 Database
+
+The repository contains a `database` directory including:
+
+- `HenriTrips.sql`
+- `HenriTrips.bak`
+
+---
+
+## Database Setup
+
+### Option 1 — SQL Script
+
+1. Open SQL Server Management Studio (SSMS)
+2. Execute `HenriTrips.sql`
+
+---
+
+### Option 2 — Restore Backup
+
+1. Open SSMS
+2. Restore `HenriTrips.bak`
+
+---
+
+# 👥 Default Test Users
+
+| Email | Password | Role |
+|---|---|---|
+| admin@henritrips.com | Admin@12345! | Admin |
+| user@henritrips.com | User@12345! | User |
+
+---
+
+# 🔧 Local Development
+
+## Frontend
+
+```bash
+cd HenriTrips.FrontEnd
+npm install
+ng serve
+```
+
+---
+
+## Backend
+
+```bash
+cd HenriTrips.FullStackClean
+dotnet restore
+dotnet build
+dotnet run --project src/HenriTrips.Api
+```
+
+---
+
+# ✅ Implemented Engineering Practices
+
+- Clean Architecture
+- Layered project structure
+- DTO separation
+- Use Case pattern
+- Dependency Injection
+- JWT Security
+- Dockerized deployment
+- Environment-based configuration
+- Health checks
+- Swagger documentation
+
+---
+
+# 📸 Screenshots
+
+UI previews are available inside:
+
+```text
+/screenshots
+```
+
+---
+
+# 📄 License
+
+MIT License
