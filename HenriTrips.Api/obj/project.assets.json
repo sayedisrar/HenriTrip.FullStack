@@ -3658,9 +3658,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api\\HenriTrips.Api.csproj",
-      "projectName": "HenriTrips.Api",
-      "projectPath": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api\\HenriTrips.Api.csproj",
+      "projectUniqueName": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api\\HenriTrips.Api.Legacy.csproj",
+      "projectName": "HenriTrips.Api.Legacy",
+      "projectPath": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api\\HenriTrips.Api.Legacy.csproj",
       "packagesPath": "C:\\Users\\sayed\\.nuget\\packages\\",
       "outputPath": "C:\\Projects\\HenriTripFullStack\\HenriTrip.FullStack\\HenriTrips.Api\\obj\\",
       "projectStyle": "PackageReference",
